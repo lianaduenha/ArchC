@@ -1394,33 +1394,6 @@ void CreateISAHeader() {
   }
   fprintf(output, "\n");
 
-  
-  /* post execution behavior*/
-  for (pformat = format_ins_list; pformat!= NULL; pformat=pformat->next) {
-    fprintf(output, "%s%svoid _behavior_%s_post(", INDENT[1], finline, 
-            pformat->name);
-    for (pfield = pformat->fields; pfield != NULL; pfield = pfield->next) {
-      if (!pfield->sign) fprintf(output, "u");
-
-      if (pfield->size < 9) fprintf(output, "int8_t");
-      else if (pfield->size < 17) fprintf(output, "int16_t");
-      else if (pfield->size < 33) fprintf(output, "int32_t");
-      else fprintf(output, "int64_t");
-      
-      fprintf(output, " %s", pfield->name);
-      
-      if (pfield->next != NULL)
-        fprintf(output, ", ");
-    }
-    fprintf(output, ");\n");
-  }
-  fprintf(output, "\n");
-  /*******/
- 
-
-
-
-
   /* instructions */
   for (pinstr = instr_list; pinstr != NULL; pinstr = pinstr->next) {
     for (pformat = format_ins_list;
@@ -1443,7 +1416,6 @@ void CreateISAHeader() {
     fprintf(output, ");\n");
   }
   fprintf(output, "\n");
-
 
   /* Closing class declaration. */
   fprintf(output,"};\n");
@@ -1522,31 +1494,6 @@ void CreateISAHeader() {
   }
   fprintf(output, "\n");
 
-
-  /* ac_behavior 2nd level macros -  instruction types post execution behavior*/
-  for( pformat = format_ins_list; pformat!= NULL; pformat=pformat->next) {
-    fprintf(output, "#define AC_BEHAVIOR_%s_post() %s_parms::%s_isa::_behavior_%s_post(", 
-            pformat->name, project_name, project_name, pformat->name);
-    for (pfield = pformat->fields; pfield != NULL; pfield = pfield->next) {
-      if (!pfield->sign) fprintf(output, "u");
-
-      if (pfield->size < 9) fprintf(output, "int8_t");
-      else if (pfield->size < 17) fprintf(output, "int16_t");
-      else if (pfield->size < 33) fprintf(output, "int32_t");
-      else fprintf(output, "int64_t");
-      
-      fprintf(output, " %s", pfield->name);
-      
-      if (pfield->next != NULL)
-        fprintf(output, ", ");
-    }
-    fprintf(output, ")\n");
-  }
-  fprintf(output, "\n");
-
-
-
-
   /* ac_behavior 2nd level macros - instructions */
   for (pinstr = instr_list; pinstr != NULL; pinstr = pinstr->next) {
     fprintf(output, "#define AC_BEHAVIOR_%s() %s_parms::%s_isa::behavior_%s(", 
@@ -1570,7 +1517,6 @@ void CreateISAHeader() {
     fprintf(output, ")\n");
   }
 
-  
   /* END OF FILE */
   fprintf( output, "\n\n#endif //_%s_BHV_MACROS_H\n\n", upper_project_name);
   fclose( output);
@@ -1592,7 +1538,10 @@ void CreateProcessorHeader() {
   char filename[256];
   char description[] = "Architecture Module header file.";
 
-  // File containing ISA declaration
+  /******/
+  extern int frequency;
+
+  // File co  ntaining ISA declaration
   FILE  *output;
 
   sprintf( filename, "%s.H", project_name);
@@ -1804,9 +1753,8 @@ if (HaveTLM2IntrPorts) {
   fprintf( output, "%sstart_up=1;\n", INDENT[2]);
   fprintf( output, "%sid.write(globalId++);\n", INDENT[2]);
  
-    
   if (ACWaitFlag)
-    fprintf(output, "%sset_proc_freq(1000/module_period_ns);\n", INDENT[2]);
+    fprintf(output, "%sset_proc_freq(%d);\n", INDENT[2], frequency);
 
   fprintf( output, "%s}\n\n", INDENT[1]);  //end constructor
 
@@ -3903,26 +3851,6 @@ void EmitInstrExec( FILE *output, int base_indent){
         }
         fprintf(output, ");\n");
 
-             
-        
-
-         /* emits post-execution behavior method call */
-        for (pformat = format_ins_list;
-                (pformat != NULL) && strcmp(pinstr->format, pformat->name);
-                pformat = pformat->next);
-        fprintf(output, "%sISA._behavior_%s_post(", INDENT[base_indent + 1],
-                pformat->name);
-        for (pfield = pformat->fields; pfield != NULL; pfield = pfield->next) {
-            if( ACDecCacheFlag )
-                fprintf(output, "instr_dec->F_%s.%s", pformat->name, pfield->name);
-            else
-                fprintf(output, "ins_cache[%d]", pfield->id);
-            if (pfield->next != NULL)
-                fprintf(output, ", ");
-        }
-        fprintf(output, ");\n");
-
-        
         if( ACWaitFlag ) {
           if (pinstr->cycles <= 5)
             fprintf(output, "%sac_qk.inc(time_%dcycle);\n", INDENT[base_indent + 1], pinstr->cycles);

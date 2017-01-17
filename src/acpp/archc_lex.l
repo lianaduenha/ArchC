@@ -553,6 +553,14 @@ HEXA_DIGIT [0-9A-Fa-f]
   return AC_WORDSIZE;
  }
 
+<ARCH>"ac_frequency" {
+  #if DEBUG_LEX
+  printf("AC_FREQUENCY: %s\n", yytext);
+  #endif
+  return AC_FREQUENCY;
+ }
+
+
 <ARCH>"ac_fetchsize" {
   #if DEBUG_LEX
   printf("AC_FETCHSIZE: %s\n", yytext);
