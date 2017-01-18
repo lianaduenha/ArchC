@@ -196,7 +196,7 @@ void CreateRegsHeader(void);                      //!< Creates the header file f
 void CreateStatsHeaderTmpl(void);                 //!< Creates the header file for ArchC statistics collection class.
 void CreateStatsImplTmpl();                       //!< Create the implementation file for ArchC statistics collection class.
 void CreateArchSyscallHeader(void);               //!< Creates the header file for ArchC model syscalls.
-void CreateArchSyscallTmpl(void);               //!< Creates the header file for ArchC model syscalls.
+void CreateArchSyscallTmpl(void);                 //!< Creates the header file for ArchC model syscalls.
 void CreateIntrHeader(void);                      //!< Creates the header file for interrupt handlers.
 void CreateIntrMacrosHeader(void);                //!< Creates the header file for interrupt handler macros.
 void CreateMakefile(void);                        //!< Creates a Makefile for the ArchC model.
@@ -205,8 +205,8 @@ void CreateImplTmpl(void);                        //!< Creates the .cpp template
 void CreateIntrTmpl(void);                        //!< Creates the .cpp template file for interrupt handlers.
 void CreateMainTmpl(void);                        //!< Creates the .cpp template file for the main function.
 void CreateProcessorImpl(void);                   //!< Creates the .cpp file for processor module.
-
-
+void CreateISAPostBehaviorImpl(void);             //!< Creates the .cpp file for ISA post behavior methods.
+     
 void CreateIntrTLM2Header(void); /******/
 void CreateIntrTLM2MacrosHeader(void); /*****/
 void CreateIntrTLM2Tmpl(void); /*****/

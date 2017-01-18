@@ -489,6 +489,8 @@ int main(int argc, char** argv) {
 
   //Creating ISA Header File
   CreateISAHeader();
+  CreateISAPostBehaviorImpl();
+
 
   //Now, declare stages if a pipeline was declared
   //Otherwise, declare one sc_module to simulate the processor datapath
@@ -1394,6 +1396,34 @@ void CreateISAHeader() {
   }
   fprintf(output, "\n");
 
+
+
+ /* post behavior per format
+  for (pformat = format_ins_list; pformat!= NULL; pformat=pformat->next) {
+    fprintf(output, "%s%svoid _behavior_%s_post(", INDENT[1], finline, 
+            pformat->name);
+    for (pfield = pformat->fields; pfield != NULL; pfield = pfield->next) {
+      if (!pfield->sign) fprintf(output, "u");
+
+      if (pfield->size < 9) fprintf(output, "int8_t");
+      else if (pfield->size < 17) fprintf(output, "int16_t");
+      else if (pfield->size < 33) fprintf(output, "int32_t");
+      else fprintf(output, "int64_t");
+      
+      fprintf(output, " %s", pfield->name);
+      
+      if (pfield->next != NULL)
+        fprintf(output, ", ");
+    }
+    fprintf(output, ");\n");
+  }
+  fprintf(output, "\n\n");
+  /*******/
+
+
+
+
+
   /* instructions */
   for (pinstr = instr_list; pinstr != NULL; pinstr = pinstr->next) {
     for (pformat = format_ins_list;
@@ -1415,7 +1445,33 @@ void CreateISAHeader() {
     }
     fprintf(output, ");\n");
   }
-  fprintf(output, "\n");
+  fprintf(output, "\n\n");
+
+
+/* post behavior per instruction*/
+  for (pinstr = instr_list; pinstr != NULL; pinstr = pinstr->next) {
+    for (pformat = format_ins_list;
+          (pformat != NULL) && strcmp(pinstr->format, pformat->name);
+          pformat = pformat->next);
+    fprintf(output, "%s%svoid post_behavior_%s(", INDENT[1], finline, pinstr->name);
+    for (pfield = pformat->fields; pfield != NULL; pfield = pfield->next) {
+      if (!pfield->sign) fprintf(output, "u");
+
+      if (pfield->size < 9) fprintf(output, "int8_t");
+      else if (pfield->size < 17) fprintf(output, "int16_t");
+      else if (pfield->size < 33) fprintf(output, "int32_t");
+      else fprintf(output, "int64_t");
+      
+      fprintf(output, " %s", pfield->name);
+      
+      if (pfield->next != NULL)
+        fprintf(output, ", ");
+    }
+    fprintf(output, ");\n");
+  }
+  fprintf(output, "\n\n");
+
+
 
   /* Closing class declaration. */
   fprintf(output,"};\n");
@@ -1443,6 +1499,10 @@ void CreateISAHeader() {
 
   /* ac_behavior main macro */
   fprintf( output, "#define ac_behavior(instr) AC_BEHAVIOR_##instr ()\n\n");
+
+  /* ac_post_behavior main macro */
+  fprintf( output, "#define ac_post_behavior(instr) AC_POST_BEHAVIOR_##instr ()\n\n");
+
 
   /* ac_behavior 2nd level macros - generic instruction */
   fprintf(output, "#define AC_BEHAVIOR_instruction() %s_parms::%s_isa::_behavior_instruction(",
@@ -1494,6 +1554,30 @@ void CreateISAHeader() {
   }
   fprintf(output, "\n");
 
+
+  /* ac_behavior 2nd level macros -  post behavior per format
+  for( pformat = format_ins_list; pformat!= NULL; pformat=pformat->next) {
+    fprintf(output, "#define AC_BEHAVIOR_%s_post() %s_parms::%s_isa::_behavior_%s_post(", 
+            pformat->name, project_name, project_name, pformat->name);
+    for (pfield = pformat->fields; pfield != NULL; pfield = pfield->next) {
+      if (!pfield->sign) fprintf(output, "u");
+
+      if (pfield->size < 9) fprintf(output, "int8_t");
+      else if (pfield->size < 17) fprintf(output, "int16_t");
+      else if (pfield->size < 33) fprintf(output, "int32_t");
+      else fprintf(output, "int64_t");
+      
+      fprintf(output, " %s", pfield->name);
+      
+      if (pfield->next != NULL)
+        fprintf(output, ", ");
+    }
+    fprintf(output, ")\n");
+  }
+  fprintf(output, "\n");*/
+
+
+
   /* ac_behavior 2nd level macros - instructions */
   for (pinstr = instr_list; pinstr != NULL; pinstr = pinstr->next) {
     fprintf(output, "#define AC_BEHAVIOR_%s() %s_parms::%s_isa::behavior_%s(", 
@@ -1516,6 +1600,34 @@ void CreateISAHeader() {
     }
     fprintf(output, ")\n");
   }
+
+  fprintf(output, "\n");
+
+/* ac_behavior 2nd level macros - post behavior per instructions */
+  for (pinstr = instr_list; pinstr != NULL; pinstr = pinstr->next) {
+    fprintf(output, "#define AC_POST_BEHAVIOR_%s() %s_parms::%s_isa::post_behavior_%s(", 
+            pinstr->name, project_name, project_name, pinstr->name);
+    for (pformat = format_ins_list;
+          (pformat != NULL) && strcmp(pinstr->format, pformat->name);
+          pformat = pformat->next);
+    for (pfield = pformat->fields; pfield != NULL; pfield = pfield->next) {
+      if (!pfield->sign) fprintf(output, "u");
+
+      if (pfield->size < 9) fprintf(output, "int8_t");
+      else if (pfield->size < 17) fprintf(output, "int16_t");
+      else if (pfield->size < 33) fprintf(output, "int32_t");
+      else fprintf(output, "int64_t");
+      
+      fprintf(output, " %s", pfield->name);
+      
+      if (pfield->next != NULL)
+        fprintf(output, ", ");
+    }
+    fprintf(output, ")\n");
+  }
+
+  
+
 
   /* END OF FILE */
   fprintf( output, "\n\n#endif //_%s_BHV_MACROS_H\n\n", upper_project_name);
@@ -2415,7 +2527,7 @@ void CreateArchImpl() {
 
     sprintf(filename, "%s_arch.cpp", project_name);
 
-    load_device = storage_list;
+    // load_device = storage_list;  
     if (!(output = fopen(filename, "w"))) {
         perror("ArchC could not open output file");
         exit(1);
@@ -3009,6 +3121,39 @@ void CreateIntrTmpl() {
   fclose(output);
 }
 
+
+
+///Creates the .cpp file for ISA post behavior methods
+
+void CreateISAPostBehaviorImpl()
+{
+  
+  extern char* project_name;
+  extern ac_dec_instr *instr_list;
+  ac_dec_instr *pinstr;
+
+  FILE *output;
+  char filename[256];
+  char description[] = "ISA post behavior implementation file.";
+
+  sprintf(filename, "%s_isa_post.cpp", project_name);
+
+  if (!(output = fopen( filename, "w"))) {
+    perror("ArchC could not open output file");
+    exit(1);
+  }
+
+  print_comment( output, description);
+
+  for (pinstr = instr_list; pinstr != NULL; pinstr = pinstr->next) {
+    fprintf(output, "//!Instruction %s post behavior method\n", pinstr->name);
+    fprintf(output, "void ac_post_behavior ( %s )", pinstr->name);
+    fprintf(output, "{\n\n};");
+  }
+
+  //END OF FILE.
+  fclose(output);
+}
 
 
 
@@ -3850,6 +3995,23 @@ void EmitInstrExec( FILE *output, int base_indent){
                 fprintf(output, ", ");
         }
         fprintf(output, ");\n");
+
+
+        /* emits instruction post behavior method call */
+        fprintf(output, "%sISA.post_behavior_%s(", INDENT[base_indent + 1],
+                pinstr->name);
+        for (pfield = pformat->fields; pfield != NULL; pfield = pfield->next) {
+            if( ACDecCacheFlag )
+                fprintf(output, "instr_dec->F_%s.%s", pformat->name, pfield->name);
+            else
+                fprintf(output, "ins_cache[%d]", pfield->id);
+            if (pfield->next != NULL)
+                fprintf(output, ", ");
+        }
+        fprintf(output, ");\n");
+
+
+
 
         if( ACWaitFlag ) {
           if (pinstr->cycles <= 5)
