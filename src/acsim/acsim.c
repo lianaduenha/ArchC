@@ -85,13 +85,14 @@ int  ACPCAddress=1;                             //!<Indicates if PC bounds is ve
 int  ACFullDecode=0;                            //!<Indicates if Full Decode Optimization is turned on or not
 int  ACCurInstrID=1;                            //!<Indicates if Current Instruction ID is save in dispatch
 int  ACPowerEnable=0;                           //!<Indicates if Power Estimation is enabled
-
+int  ACFailureEnable=0;                         //!<Indicates if Failure Mode is enabled
 char ACOptions[500];                            //!<Stores ArchC recognized command line options
 char *ACOptions_p = ACOptions;                  //!<Pointer used to append options in ACOptions
 char *arch_filename;                            //!<Stores ArchC arquitecture file
 
 int ac_host_endian;                             //!<Indicates the endianness of the host machine
 extern int ac_tgt_endian;                       //!<Indicates the endianness of the host machine
+
 int ac_match_endian;                            //!<Indicates whether host and target endianness match on or not
 
 //! This structure describes one command-line option mapping.
@@ -141,6 +142,7 @@ struct option_map option_map[] = {
   {"--full-decode"     , "-fdc","Enable Full Decode Optimization.", 0},
   {"--no-curr-instr-id", "-nci","Disable Current Instruction ID save in dispatch.", 0},
   {"--power"           , "-pw" ,"Enable Power Estimation.", 0},
+  {"--failure-mode"    , "-fm" ,"Enable Failure Mode.",0},
   { }
 };
 
@@ -378,6 +380,10 @@ int main(int argc, char** argv) {
             case OPPower:
               ACPowerEnable = 1;
               ACOptions_p += sprintf( ACOptions_p, "%s ", argv[0]);
+              break;
+            case OPFailure:
+              ACFailureEnable = 1;
+              ACOptions_p += sprintf( ACOptions_p, "%s ", argv[0]);
             default:
               break;
           }
@@ -489,7 +495,7 @@ int main(int argc, char** argv) {
 
   //Creating ISA Header File
   CreateISAHeader();
-  CreateISAPostBehaviorImpl();
+  //CreateISAPostBehaviorImpl();
 
 
   //Now, declare stages if a pipeline was declared
@@ -1449,6 +1455,7 @@ void CreateISAHeader() {
 
 
 /* post behavior per instruction*/
+  fprintf(output, "#ifdef FAILURE_MODE \n");
   for (pinstr = instr_list; pinstr != NULL; pinstr = pinstr->next) {
     for (pformat = format_ins_list;
           (pformat != NULL) && strcmp(pinstr->format, pformat->name);
@@ -1469,7 +1476,7 @@ void CreateISAHeader() {
     }
     fprintf(output, ");\n");
   }
-  fprintf(output, "\n\n");
+  fprintf(output, "#endif\n\n");
 
 
 
@@ -1604,6 +1611,7 @@ void CreateISAHeader() {
   fprintf(output, "\n");
 
 /* ac_behavior 2nd level macros - post behavior per instructions */
+  fprintf(output, "#ifdef FAILURE_MODE\n");
   for (pinstr = instr_list; pinstr != NULL; pinstr = pinstr->next) {
     fprintf(output, "#define AC_POST_BEHAVIOR_%s() %s_parms::%s_isa::post_behavior_%s(", 
             pinstr->name, project_name, project_name, pinstr->name);
@@ -1625,6 +1633,7 @@ void CreateISAHeader() {
     }
     fprintf(output, ")\n");
   }
+  fprintf(output, "#endif");
 
   
 
@@ -3124,7 +3133,7 @@ void CreateIntrTmpl() {
 
 
 ///Creates the .cpp file for ISA post behavior methods
-
+/*
 void CreateISAPostBehaviorImpl()
 {
   
@@ -3145,17 +3154,20 @@ void CreateISAPostBehaviorImpl()
 
   print_comment( output, description);
 
+  fprintf(output, "\n#ifdef FAILURE_MODE\n");
+
   for (pinstr = instr_list; pinstr != NULL; pinstr = pinstr->next) {
     fprintf(output, "//!Instruction %s post behavior method\n", pinstr->name);
     fprintf(output, "void ac_post_behavior ( %s )", pinstr->name);
-    fprintf(output, "{\n\n};");
+    fprintf(output, "{\n};");
   }
 
+  fprintf(output, "\n#endif");
   //END OF FILE.
   fclose(output);
 }
 
-
+*/
 
 
 
@@ -3484,6 +3496,10 @@ void CreateMakefile(){
   //!< The guest arch is big endian?
   if ( ac_tgt_endian )
     fprintf( output, " -DAC_GUEST_BIG_ENDIAN");
+
+  if (ACFailureEnable)
+    fprintf(output, " -DFAILURE_MODE");
+
 
   //!< The guest and host arch is the same endianness?
   if ( ac_match_endian )
@@ -3998,7 +4014,7 @@ void EmitInstrExec( FILE *output, int base_indent){
 
 
         /* emits instruction post behavior method call */
-        fprintf(output, "%sISA.post_behavior_%s(", INDENT[base_indent + 1],
+        fprintf(output, "#ifdef FAILURE_MODE \n %sISA.post_behavior_%s(", INDENT[base_indent + 1],
                 pinstr->name);
         for (pfield = pformat->fields; pfield != NULL; pfield = pfield->next) {
             if( ACDecCacheFlag )
@@ -4008,7 +4024,7 @@ void EmitInstrExec( FILE *output, int base_indent){
             if (pfield->next != NULL)
                 fprintf(output, ", ");
         }
-        fprintf(output, ");\n");
+        fprintf(output, ");\n#endif\n");
 
 
 

@@ -124,6 +124,7 @@ enum _ac_cmd_options {
   OPFullDecode,
   OPCurInstrID,
   OPPower,
+  OPFailure,
   ACNumberOfOptions,
 };
 
@@ -205,7 +206,7 @@ void CreateImplTmpl(void);                        //!< Creates the .cpp template
 void CreateIntrTmpl(void);                        //!< Creates the .cpp template file for interrupt handlers.
 void CreateMainTmpl(void);                        //!< Creates the .cpp template file for the main function.
 void CreateProcessorImpl(void);                   //!< Creates the .cpp file for processor module.
-void CreateISAPostBehaviorImpl(void);             //!< Creates the .cpp file for ISA post behavior methods.
+//void CreateISAPostBehaviorImpl(void);             //!< Creates the .cpp file for ISA post behavior methods.
      
 void CreateIntrTLM2Header(void); /******/
 void CreateIntrTLM2MacrosHeader(void); /*****/
