@@ -124,7 +124,7 @@ enum _ac_cmd_options {
   OPFullDecode,
   OPCurInstrID,
   OPPower,
-  OPFailure,
+  OPPostBehavior,
   ACNumberOfOptions,
 };
 

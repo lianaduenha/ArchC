@@ -85,7 +85,7 @@ int  ACPCAddress=1;                             //!<Indicates if PC bounds is ve
 int  ACFullDecode=0;                            //!<Indicates if Full Decode Optimization is turned on or not
 int  ACCurInstrID=1;                            //!<Indicates if Current Instruction ID is save in dispatch
 int  ACPowerEnable=0;                           //!<Indicates if Power Estimation is enabled
-int  ACFailureEnable=0;                         //!<Indicates if Failure Mode is enabled
+int  ACPostBehaviorEnable=0;                         //!<Indicates if Failure Mode is enabled
 char ACOptions[500];                            //!<Stores ArchC recognized command line options
 char *ACOptions_p = ACOptions;                  //!<Pointer used to append options in ACOptions
 char *arch_filename;                            //!<Stores ArchC arquitecture file
@@ -142,7 +142,7 @@ struct option_map option_map[] = {
   {"--full-decode"     , "-fdc","Enable Full Decode Optimization.", 0},
   {"--no-curr-instr-id", "-nci","Disable Current Instruction ID save in dispatch.", 0},
   {"--power"           , "-pw" ,"Enable Power Estimation.", 0},
-  {"--failure-mode"    , "-fm" ,"Enable Failure Mode.",0},
+  {"--post-behavior"   , "-pb" ,"Enable post behavior methods.",0},
   { }
 };
 
@@ -381,8 +381,8 @@ int main(int argc, char** argv) {
               ACPowerEnable = 1;
               ACOptions_p += sprintf( ACOptions_p, "%s ", argv[0]);
               break;
-            case OPFailure:
-              ACFailureEnable = 1;
+            case OPPostBehavior:
+              ACPostBehaviorEnable = 1;
               ACOptions_p += sprintf( ACOptions_p, "%s ", argv[0]);
             default:
               break;
@@ -3506,7 +3506,7 @@ void CreateMakefile(){
   if ( ac_tgt_endian )
     fprintf( output, " -DAC_GUEST_BIG_ENDIAN");
 
-  if (ACFailureEnable)
+  if (ACPostBehaviorEnable)
     fprintf(output, " -DFAILURE_MODE");
 
 

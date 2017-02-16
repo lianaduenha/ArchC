@@ -1,0 +1,9 @@
+
+Cache statistics:
+Read miss:  52.544930 Read hit:   47.455070 Write miss:  0.000000 Write hit:   0.000000 Number of block evictions: 4468
+Cache statistics:
+Read miss:  1.838086 Read hit:   98.161911 Write miss:  3.635601 Write hit:   96.364395 Number of block evictions: 219331
+Cache statistics:
+Read miss:  52.584656 Read hit:   47.415344 Write miss:  0.000000 Write hit:   0.000000 Number of block evictions: 5480
+Cache statistics:
+Read miss:  2.119165 Read hit:   97.880836 Write miss:  4.029454 Write hit:   95.970551 Number of block evictions: 7211854
