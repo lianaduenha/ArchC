@@ -1476,6 +1476,13 @@ void CreateISAHeader() {
     }
     fprintf(output, ");\n");
   }
+
+  //fprintf(output, "/*Failure mode functions*/\n\n");
+  //fprintf(output, "%s%sac_word stuckAt (ac_word, int, int, float refProb=0);\n", INDENT[1], finline);
+  //fprintf(output, "%s%sac_word stuckHigh (ac_word, int, float refProb=0);\n", INDENT[1], finline);
+  //fprintf(output, "%s%sac_word stuckLow (ac_word, int, float refProb=0);\n", INDENT[1], finline);
+  //fprintf(output, "%s%sac_word bitFlip  (ac_word, int, float refProb=0);\n", INDENT[1], finline);
+  //fprintf(output, "%s%sac_word randomBitFlip  (ac_word,  float refProb=0);\n", INDENT[1], finline);
   fprintf(output, "#endif\n\n");
 
 
@@ -1633,6 +1640,8 @@ void CreateISAHeader() {
     }
     fprintf(output, ")\n");
   }
+
+ 
   fprintf(output, "#endif");
 
   

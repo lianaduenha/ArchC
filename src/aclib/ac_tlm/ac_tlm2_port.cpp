@@ -39,6 +39,7 @@
 #include "ac_tlm2_port.H"
 #include "ac_tlm2_payload.H"
 
+
 // If you want to debug TLM 2.0, please uncomment the next line
 //#define debugTLM2
 
@@ -131,6 +132,7 @@ void ac_tlm2_port::read(ac_ptr buf, uint32_t address, int wordsize,sc_core::sc_t
         printf("\nAC_TLM2_PORT READ ERROR");
         exit(0);
     }
+
 }
 
 /* read n_words */
@@ -218,6 +220,7 @@ void ac_tlm2_port::read(ac_ptr buf, uint32_t address,
             printf("*** AC_TLM2_PORT READ: wordsize-->%d not supported ****", wordsize);
         break;
     }
+   
 }
 
 /** 
@@ -313,7 +316,9 @@ void ac_tlm2_port::write(ac_ptr buf, uint32_t address, int wordsize,sc_core::sc_
         printf("\n\nAC_TLM2_PORT WRITE: wordsize not implemented");
       break;
   }
-}
+
+   
+ }
 
 /** 
  * Writes multiple words.
@@ -354,6 +359,8 @@ void ac_tlm2_port::write(ac_ptr buf, uint32_t address,
 
     (*this)->b_transport(*payload, time_info);  
   }
+
+   
 }
 
 

@@ -46,6 +46,12 @@
 
 #include "ac_log.H"
 
+#define AC_FAILURE_MODE
+
+#ifdef AC_FAILURE_MODE
+#include "ac_faults.H"
+#endif
+
 using std::string;
 using std::list;
 
@@ -71,10 +77,16 @@ protected:
 
 public:
   
+  #ifdef AC_FAILURE_MODE
+  #include "ac_reg_failure.H"
+  #endif
+ 
   //!Reading contents. Overloaded Method.
-  const T& read( ) const {
-
-    return Data;
+  T& read ()  {
+      #ifdef AC_FAILURE_MODE
+      read_failure();
+      #endif
+      return Data;
   }
 
   //!Writing to the register. Overloaded Method.
@@ -83,8 +95,11 @@ public:
 #ifdef AC_VERBOSE
     changes.push_back( chg_log(0, datum , sc_simulation_time()));
 #endif
-  
+    
     Data = datum;
+    #ifdef AC_FAILURE_MODE
+    write_failure();
+    #endif
  
   }
 
@@ -125,7 +140,7 @@ public:
 
   //!Convertion operator
   operator const T& () const { 
-    return read();
+    return getData();
   }
 
   //   //!Convertion operator
@@ -156,8 +171,14 @@ public:
   //!Overloaded assign operators
 
   //ac_reg<T> = ac_reg
+
+  const T& getData () const
+  {
+      return Data;
+  }
+
   ac_reg<T>& operator = ( const ac_reg<T> &r ){ 
-    write( r.read() );
+    write( r.getData());
     return *this;
   }
 
@@ -170,121 +191,121 @@ public:
 
   //!ac_reg<T> *= Type T
   ac_reg<T> & operator *= ( const T v ){ 
-    write( read() * (int)v );
+    write( getData() * (int)v );
     return *this;
   }
 
   //!ac_reg<T> *= ac_reg
   ac_reg<T> & operator *= ( ac_reg<T> &r ){ 
-    write( read() * r.read() );
+    write( getData() * r.getData() );
     return *this;
   }
 
   //!ac_reg<T> /= Type T
   ac_reg<T> & operator /= ( const T d ){ 
-    write( read() / d );
+    write( getData() / d );
     return *this;
   }
 
   //!ac_reg<T> /= ac_reg
   ac_reg<T> & operator /= ( ac_reg<T> &r ){ 
-    write( read() / r.read() );
+    write( getData() / r.getData() );
     return *this;
   }
 
   //!ac_reg<T> %= Type T
   ac_reg<T> & operator %= ( const T d ){ 
-    write( read() % d );
+    write( getData() % d );
     return *this;
   }
 
   //!ac_reg<T> %= ac_reg
   ac_reg<T> & operator %= ( ac_reg<T> &r ){ 
-    write( read() % r.read() );
+    write( getData() % r.getData() );
     return *this;
   }
 
   //!ac_reg<T> += Type T
   ac_reg<T> & operator += ( const T& d ){ 
-    write( read() + d );
+    write( getData() + d );
     return *this;
   }
 
   //!ac_reg<T> += ac_reg
   ac_reg<T> & operator += ( ac_reg<T> &r ){ 
-    write( read() + r.read() );
+    write( getData() + r.getData() );
     return *this;
   }
 
   //!ac_reg<T> -= Type T
   ac_reg<T> & operator -= ( const T d ){ 
-    write( read() - d );
+    write( getData() - d );
     return *this;
   }
 
   //!ac_reg<T> -= ac_reg
   ac_reg<T> & operator -= ( ac_reg<T> &r ){ 
-    write( read() - r.read() );
+    write( getData() - r.getData() );
     return *this;
   }
 
   //!ac_reg<T> <<= Type T
   ac_reg<T> & operator <<= ( const T d ){ 
-    write( read() << d );
+    write( getData() << d );
     return *this;
   }
 
   //!ac_reg<T> <<= ac_reg
   ac_reg<T> & operator <<= ( ac_reg<T> &r ){ 
-    write( read() << r.read() );
+    write( getData() << r.getData() );
     return *this;
   }
 
   //!ac_reg<T> >>= Type T
   ac_reg<T> & operator >>= ( const T d ){ 
-    write( read() >> d );
+    write( getData() >> d );
     return *this;
   }
 
   //!ac_reg<T> >>= ac_reg
   ac_reg<T> & operator >>= ( ac_reg<T> &r ){ 
-    write( read() >> r.read() );
+    write( getData() >> r.getData() );
     return *this;
   }
 
   //!ac_reg<T> &= Type T
   ac_reg<T> & operator &= ( const T d ){ 
-    write( read() & d );
+    write( getData() & d );
     return *this;
   }
 
   //!ac_reg<T> &= ac_reg
   ac_reg<T> & operator &= ( ac_reg<T> &r ){ 
-    write( read() & r.read() );
+    write( getData() & r.getData() );
     return *this;
   }
 
   //!ac_reg<T> ^= Type T
   ac_reg<T> & operator ^= ( const T d ){ 
-    write( read() ^ d );
+    write( getData() ^ d );
     return *this;
   }
 
   //!ac_reg<T> ^= ac_reg
   ac_reg<T> & operator ^= ( ac_reg<T> &r ){ 
-    write( read() ^ r.read() );
+    write( getData() ^ r.getData() );
     return *this;
   }
 
   //!ac_reg<T> |= Type T
   ac_reg<T> & operator |= ( const T d ){ 
-    write( read() | d );
+    write( getData() | d );
     return *this;
   }
 
   //!ac_reg<T> |= ac_reg
   ac_reg<T> & operator |= ( ac_reg<T> &r ){ 
-    write( read() | r.read() );
+    write( getData() | r.getData() );
     return *this;
   }
 

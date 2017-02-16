@@ -98,7 +98,10 @@ public:
   virtual void write(ac_ptr buf, uint32_t address, int wordsize, int n_words,sc_core::sc_time &time_info,unsigned int procId=0) = 0;
 
 
-
+  
+  //virtual void read_failure() = 0;
+  //virtual void write_failure () = 0;
+  
 
 
   virtual std::string get_name() const = 0;

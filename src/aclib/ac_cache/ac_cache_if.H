@@ -1,7 +1,9 @@
 #ifndef _AC_CACHE_IF_H_INCLUDED_
 #define _AC_CACHE_IF_H_INCLUDED_
 
+
 #include "ac_inout_if.H"
+
 template <typename ac_word, typename ac_Hword, typename cache_t>
 class ac_cache_if : public ac_inout_if {
 	cache_t &cache;
@@ -16,6 +18,10 @@ class ac_cache_if : public ac_inout_if {
 	* @param wordsize Word size in bits.
 	* 
 	*/
+       
+    #include "ac_cache_if_failure.H"
+    
+
 	virtual void read(ac_ptr buf, uint32_t address, int wordsize) {
             
 		//printf("\nAC_CACHE_IF::read -> address=%x", address);
@@ -50,6 +56,11 @@ class ac_cache_if : public ac_inout_if {
 		default:
 			abort();
 		}
+		
+		
+		read_failure();
+		
+		
 	}
 
 	/** 
@@ -112,6 +123,11 @@ class ac_cache_if : public ac_inout_if {
 		default:
 			abort();
 		}
+
+		
+		write_failure();
+		
+		
 	}
 
 	/** 

@@ -14,7 +14,7 @@ libactlm_la_SOURCES = ac_tlm_port.cpp ac_tlm2_port.cpp ac_tlm2_nb_port.cpp ac_tl
 
 if HAVE_TLM2
 AM_CPPFLAGS += @TLM2_CFLAGS@
-include_HEADERS += ac_tlm2_port.H ac_tlm2_nb_port.H ac_tlm2_intr_port.H ac_tlm2_payload.H
+include_HEADERS += ac_tlm2_port.H ac_tlm2_nb_port.H ac_tlm2_intr_port.H ac_tlm2_payload.H 
 libactlm_la_SOURCES +=  ac_tlm2_port.cpp ac_tlm2_nb_port.cpp ac_tlm2_intr_port.cpp
 else
 AM_CPPFLAGS += @TLM_CFLAGS@

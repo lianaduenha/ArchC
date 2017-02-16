@@ -133,7 +133,6 @@ class ac_write_back_cache {
 			return d;
 		}
 
-
 		if (!cache.get_block_for_read(b)) {
 			cache.get_available_block();
 			if (cache.block_status().is_dirty()) {
@@ -276,7 +275,6 @@ class ac_write_through_cache {
 
 		
 			address b = byte_to_word(a);
-
 			
 			a = a/block_size*block_size;
 			if(a >= MEM_SIZE_ ){

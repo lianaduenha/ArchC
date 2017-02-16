@@ -79,8 +79,6 @@ public:
   string name;
   uint32_t size;
 
-
-
   /** 
    * Default constructor.
    */
@@ -140,7 +138,6 @@ public:
     write(buf, address, wordsize, n_words,time_info);
   }
 
-  
   virtual string get_name() const;
 
   virtual uint32_t get_size() const;
