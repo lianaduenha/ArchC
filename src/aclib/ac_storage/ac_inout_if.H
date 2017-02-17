@@ -99,6 +99,13 @@ public:
 
 
 
+  /*
+  virtual bool read_dir(uint32_t , int , int , sc_core::sc_time& o) = 0;
+  virtual bool write_dir(uint32_t , int , int , sc_core::sc_time& )= 0;
+  virtual void start_dir(int , int , sc_core::sc_time& ) = 0;
+  virtual bool check_dir(uint32_t ,  int , int , sc_core::sc_time& ) = 0;
+  */
+
 
 
   virtual std::string get_name() const = 0;

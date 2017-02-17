@@ -124,6 +124,7 @@ enum _ac_cmd_options {
   OPFullDecode,
   OPCurInstrID,
   OPPower,
+  OPPlatform,
   ACNumberOfOptions,
 };
 

@@ -99,7 +99,7 @@ template<typename ac_word, typename ac_Hword> class ac_memport :
 private:
 
   ac_inout_if* storage;
-
+  
   ac_word aux_word;
   ac_Hword aux_Hword;
   uint8_t aux_byte;
@@ -151,10 +151,7 @@ private:
     return result;
   #endif
   }  
-
-
-
-  
+ 
 
 protected:
   typedef list<change_log<ac_word> > log_list;
@@ -367,15 +364,9 @@ public:
           setTimeInfo (time);
         }
         
-        
-
 // read:  storage->read  (p,             address, sizeof(ac_word) * 8, l/sizeof(ac_word), time,this->procId);
 // write: storage->write ((uint32_t*) d, address, sizeof(ac_word) * 8, length / (sizeof(ac_word) * 8), time,this->procId); //TODO Remove cast
     }
-
-
-
-
 
 
 

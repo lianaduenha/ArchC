@@ -180,6 +180,12 @@ class ac_cache_if : public ac_inout_if {
 		}
 
 
+/*
+ virtual bool read_dir(uint32_t , int , int , sc_core::sc_time& o){}
+  virtual bool write_dir(uint32_t , int , int , sc_core::sc_time& ){}
+  virtual void start_dir(int , int , sc_core::sc_time& ){}
+  virtual bool check_dir(uint32_t ,  int , int , sc_core::sc_time& ){}
+*/
 
 
 	virtual std::string get_name() const {

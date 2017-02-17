@@ -85,6 +85,7 @@ int  ACPCAddress=1;                             //!<Indicates if PC bounds is ve
 int  ACFullDecode=0;                            //!<Indicates if Full Decode Optimization is turned on or not
 int  ACCurInstrID=1;                            //!<Indicates if Current Instruction ID is save in dispatch
 int  ACPowerEnable=0;                           //!<Indicates if Power Estimation is enabled
+int  ACPlatformEnable=0;                        //!<Indicates if the processor is in a platform
 
 char ACOptions[500];                            //!<Stores ArchC recognized command line options
 char *ACOptions_p = ACOptions;                  //!<Pointer used to append options in ACOptions
@@ -114,6 +115,12 @@ ac_decoder_full *decoder;
 /*!Storage device used for loading applications */
 ac_sto_list* load_device=0;
 
+/*DIR CHANGES*/
+//char *dirstorage;
+ac_sto_list *dirstorage;
+int isPlatform = 0;
+bool DIRPRINTED = false;
+
 /*! This is the table of mappings.  Mappings are tried sequentially
   for each option encountered; the first one that matches, wins.  */
 struct option_map option_map[] = {
@@ -141,6 +148,7 @@ struct option_map option_map[] = {
   {"--full-decode"     , "-fdc","Enable Full Decode Optimization.", 0},
   {"--no-curr-instr-id", "-nci","Disable Current Instruction ID save in dispatch.", 0},
   {"--power"           , "-pw" ,"Enable Power Estimation.", 0},
+  {"--platform"        , "-pl" ,"Enable simulation in a platform.", 0},
   { }
 };
 
@@ -236,7 +244,7 @@ int main(int argc, char** argv) {
   extern ac_pipe_list *pipe_list;
   extern int HaveFormattedRegs;
   extern int HaveTLMIntrPorts;
-/***/
+  
   extern int HaveTLM2IntrPorts;
 
   extern ac_decoder_full *decoder;
@@ -377,6 +385,11 @@ int main(int argc, char** argv) {
               break;
             case OPPower:
               ACPowerEnable = 1;
+              ACOptions_p += sprintf( ACOptions_p, "%s ", argv[0]);
+              break;
+            case OPPlatform:
+              ACPlatformEnable = 1;
+              isPlatform = 1;
               ACOptions_p += sprintf( ACOptions_p, "%s ", argv[0]);
             default:
               break;
@@ -623,6 +636,7 @@ void CreateArchHeader() {
         fprintf(output, "#include \"ac_plrum_replacement_policy.H\"\n");
         fprintf(output, "#include \"ac_lru_replacement_policy.H\"\n");
         fprintf(output, "#include \"ac_cache_if.H\"\n");
+        fprintf(output, "#include \"ac_dir.H\"\n");
     }
 
     // Declaring Architecture Resources class.
@@ -725,6 +739,7 @@ void CreateArchHeader() {
             if (!HaveMemHier) { // It is a generic cache. Just emit a base
                                 // container object.
                 fprintf(output, "%sac_mem %s;\n", INDENT[1], pstorage->name);
+                
                 fprintf(output, "%sac_memport<%s_parms::ac_word, "
                                 "%s_parms::ac_Hword> %s_mport;\n",
                         INDENT[1], project_name, project_name, pstorage->name);
@@ -746,6 +761,7 @@ void CreateArchHeader() {
                         "%sac_memport<%s_parms::ac_word, %s_parms::ac_Hword> "
                         "%s_mport;\n",
                         INDENT[1], project_name, project_name, pstorage->name);
+
             }
             break;
 
@@ -754,6 +770,7 @@ void CreateArchHeader() {
             fprintf(output, "%sac_memport<%s_parms::ac_word, "
                             "%s_parms::ac_Hword> %s_mport;\n",
                     INDENT[1], project_name, project_name, pstorage->name);
+            dirstorage = pstorage; // just for compatibility - used in CreateArchImpl
             break;
 
         case TLM_PORT:
@@ -768,6 +785,10 @@ void CreateArchHeader() {
             fprintf(output, "%sac_memport<%s_parms::ac_word, "
                             "%s_parms::ac_Hword> %s_mport;\n",
                     INDENT[1], project_name, project_name, pstorage->name);
+             /**FIXME: dirstorage will be used in CreateArchImpl
+                       but this is not the better way to do this **/
+             dirstorage = pstorage; 
+                
             break;
 
         case TLM2_NB_PORT:
@@ -792,6 +813,18 @@ void CreateArchHeader() {
         fprintf(output, "%sac_reg<%s_parms::ac_word> intr_reg;\n", INDENT[1],
                 project_name);
     }
+
+/*
+    if (isPlatform){
+       
+        fprintf(output, "%sac_dir DIR;\n",
+                        INDENT[1]);
+       
+       
+    }*/
+                
+
+
 
     fprintf(output, "\n\n");
 
@@ -827,6 +860,10 @@ void CreateArchHeader() {
 
 /*!Create ArchC Resources Reference Header File */
 void CreateArchRefHeader() {
+    /*DIR CHANGES*****/
+    DIRPRINTED = false;
+    /*****/
+
     extern ac_sto_list *storage_list;
     extern char* project_name;
     extern char* upper_project_name;
@@ -854,6 +891,7 @@ void CreateArchRefHeader() {
     fprintf( output, "#include  \"ac_reg.H\"\n");
     fprintf( output, "#include  \"ac_regbank.H\"\n");
 
+
     if (HaveTLMIntrPorts)
         fprintf(output, "#include  \"ac_tlm_intr_port.H\"\n");
 
@@ -871,6 +909,7 @@ void CreateArchRefHeader() {
         fprintf(output, "#include \"ac_random_replacement_policy.H\"\n");
         fprintf(output, "#include \"ac_plrum_replacement_policy.H\"\n");
         fprintf(output, "#include \"ac_lru_replacement_policy.H\"\n");
+        fprintf( output, "#include  \"ac_dir.H\"\n");
     }
 
 
@@ -967,16 +1006,30 @@ void CreateArchRefHeader() {
             case DCACHE:
             case MEM:
                 fprintf(output, "%sac_memport<%s_parms::ac_word, %s_parms::ac_Hword>& %s;\n", INDENT[1], project_name, project_name, pstorage->name);
+                /***DIR CHANGES ****/
+                
+
                 break;
 
             default:
                 fprintf( output, "%sac_memport<%s_parms::ac_word, %s_parms::ac_Hword>& %s;\n", INDENT[1], project_name, project_name, pstorage->name);
                 break;
         }
+
+
+        
+          
+                
+           
     }
 
     if (HaveTLMIntrPorts || HaveTLM2IntrPorts) 
         fprintf( output, "%sac_reg<%s_parms::ac_word>& intr_reg;\n",INDENT[1], project_name);
+
+    /*
+    if (isPlatform)
+        fprintf(output, "%sac_dir& DIR;\n", INDENT[1]);
+    */  
 
     fprintf(output, "\n");
 
@@ -1034,6 +1087,10 @@ void CreateArchRefImpl() {
 
     if (HaveTLMIntrPorts || HaveTLM2IntrPorts) 
         fprintf(output, ", intr_reg(arch.intr_reg) ");
+    /*
+    if (isPlatform)
+        fprintf(output, ", DIR(arch.DIR)");
+    */
 
     fprintf(output, " {}\n\n");
     fclose( output);
@@ -2402,6 +2459,8 @@ void CreateProcessorImpl() {
 
 /** Creates the _arch.cpp Implementation File. */
 void CreateArchImpl() {
+
+    DIRPRINTED = false;
     extern ac_sto_list *storage_list, *fetch_device, *first_level_data_device;
     extern int HaveMemHier, HaveTLMPorts, HaveTLM2IntrPorts, HaveTLM2Ports,
         HaveTLM2NBPorts, HaveTLM2IntrPorts;
@@ -2482,8 +2541,16 @@ void CreateArchImpl() {
                         pstorage->name);
             } else {
                 // It is an ac_cache object.
-                fprintf(output, "%s%s(%s_mport,globalId)", INDENT[1],
-                        pstorage->name, pstorage->higher->name);
+                if (isPlatform) 
+                  {
+                    fprintf(output, "%s%s(%s_mport, %s, globalId)", INDENT[1],
+                        pstorage->name, pstorage->higher->name, dirstorage->name);
+                  }
+                  else
+                  {
+                   fprintf(output, "%s%s(%s_mport, globalId)", INDENT[1],
+                        pstorage->name, pstorage->higher->name); 
+                  }
                 fprintf(output, ",\n%s%s_if(%s)", INDENT[1], pstorage->name,
                         pstorage->name);
                 fprintf(output, ",\n%s%s_mport(*this, %s_if)", INDENT[1],
@@ -2510,6 +2577,7 @@ void CreateArchImpl() {
                     pstorage->name, pstorage->size);
             fprintf(output, "%s%s_mport(*this, %s)", INDENT[1], pstorage->name,
                     pstorage->name);
+           
             break;
 
         case TLM2_NB_PORT:
@@ -2531,8 +2599,16 @@ void CreateArchImpl() {
     }
 
     if (HaveTLMIntrPorts || HaveTLM2IntrPorts) {
-        fprintf(output, "\n%s,intr_reg(\"instr_reg\",1)", INDENT[1]);
+        fprintf(output, ",\n%sintr_reg(\"instr_reg\",1)", INDENT[1]);
     }
+    
+    /*
+    if (isPlatform)
+        fprintf(output, ",\n%sDIR(%s)", INDENT[1], dirstorage);
+    */
+
+
+
 
     /* opening constructor body */
     fprintf(output, " {\n\n");
@@ -2564,6 +2640,16 @@ void CreateArchImpl() {
         }
     }
 
+    
+    /*
+    if (isPlatform){
+      fprintf(output, "%s%s.setDir(DIR);\n", INDENT[1], 
+            fetch_device->name);
+      fprintf(output, "%s%s.setDir(DIR);\n", INDENT[1], 
+            first_level_data_device->name);
+    } 
+    */
+    
     fprintf(output, "%sINST_PORT = &%s_mport;\n", INDENT[1],
             fetch_device->name);
 

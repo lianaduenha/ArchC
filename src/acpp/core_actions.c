@@ -79,6 +79,7 @@ int HaveTLMIntrPorts;
 int HaveTLM2Ports;
 int HaveTLM2NBPorts;
 int HaveTLM2IntrPorts;
+int HaveDir;
 
 int instr_num;
 int declist_num;
@@ -136,6 +137,7 @@ void init_core_actions()
   HaveTLM2Ports = 0;
   HaveTLM2NBPorts = 0;
   HaveTLM2IntrPorts = 0;
+ 
 
   instr_num = 0;
   declist_num = 0;

@@ -3,10 +3,12 @@
 
 #include "ac_cache_bhv.H"
 #include "ac_cache_trace.H"
-#define HAVE_DIR 1
-#ifdef HAVE_DIR
-#include "Dir.h"
-#endif
+
+
+
+#include "ac_dirport.H"
+
+
 #define MEM_SIZE_ 0x20000000
 
 
@@ -123,7 +125,7 @@ class ac_write_back_cache {
 
 	  const cpu_word *read(address a, unsigned length) {
 
-		//printf("\nAC_CACHE WB::read -> address=%x  length=%d", a, length);
+		printf("\nAC_CACHE WB::read -> address=%x  length=%d", a, length);
 
 		address b = byte_to_word(a);
 
@@ -155,7 +157,7 @@ class ac_write_back_cache {
 
 	  void write(address a, const cpu_word *d, unsigned length) {
 
-		  //printf("\nAC_CACHE WB::write -> address=%x  length=%d", a, length);
+		printf("\nAC_CACHE WB::write -> address=%x  length=%d", a, length);
 
 
 		address b = byte_to_word(a);
@@ -227,11 +229,9 @@ class ac_write_through_cache {
 	bool trace_active;
 	int idCache;
 	int ref;
-	#ifdef HAVE_DIR
-		static Dir dir;
-	#endif
 	
-	
+	ac_dirport dirport;
+		
 	void setId (int id)
     {
    		idCache = id;
@@ -257,10 +257,15 @@ class ac_write_through_cache {
 		setId(proc_id);
 		memory.setBlockSize (block_size);
 		ref =0;
-		#ifdef HAVE_DIR
-		if(getId() == 0)
-			dir.start(associativity, index_size);
-		#endif
+	
+	}
+	ac_write_through_cache(backing_store &memory_, ac_tlm2_port &dir, const int proc_id=-1) : memory(memory_), trace_active(false),
+  cache(proc_id), dirport(dir) {
+
+		setId(proc_id);
+		memory.setBlockSize (block_size);
+		ref =0;
+	
 	}
 	~ac_write_through_cache() {
 		if (trace_active) delete cache_trace;
@@ -271,6 +276,7 @@ class ac_write_through_cache {
 		cache_trace = new ac_cache_trace(o);
 		trace_active = true;
 	}
+
 	
 	const cpu_word *read(address a, unsigned length) {
 
@@ -284,18 +290,23 @@ class ac_write_through_cache {
 				const cpu_word *d = memory.read_block(a, length);
 				return d;
 			}
-			
+
+			/*codigo do archc original (com dir dentro do ArchC)
 			int cacheIndex=0;
 			bool cacheAnswer = !cache.get_block_for_read(b, &cacheIndex);
 			uint32_t tag = (uint32_t) cache.get_tag(b); 
-			bool cdir = false;
+			
+			bool cdir = !(memory.check_dir((uint32_t) a, getId(), cacheIndex));
+
+			
 			#ifdef HAVE_DIR
 				cdir = !(dir.checkValidation(getId(), tag, cacheIndex));
 			#endif
+
 			if ( cacheAnswer || cdir) {
 				#ifdef HAVE_DIR
 					if(!cacheAnswer){
-						cache.invalidate(b);
+						cache.invalidate(b);  
 						cache.memory_read_hit();
 					}
 				#endif
@@ -307,12 +318,33 @@ class ac_write_through_cache {
 				cache.write_block(d);
 				cache.block_status().set_valid();
 			}
+			*/	// ate aqui
+
+
+
+			int cacheIndex=0;
+			bool cacheAnswer = !cache.get_block_for_read(b, &cacheIndex);
+			//bool cdir = !(memory.check_dir((uint32_t) a, getId(), cacheIndex));
+			bool cdir = !(dirport.check((uint32_t) a, getId(), cacheIndex));
+				
+			if ( cacheAnswer || cdir) {
+				if(cacheAnswer)
+					cache.memory_read_hit();
+				
+				cacheIndex = cache.get_available_block();
+				//memory.read_dir((uint32_t) a, cacheIndex, getId());
+				dirport.read((uint32_t) a, cacheIndex, getId());
+
+				const cpu_word *d = memory.read_block(a, block_size);
+				cache.write_block(d);
+				cache.block_status().set_valid();
+			}
+
 
 			if (trace_active) cache_trace->add(trace_read, word_to_byte(b), length);
-
 			const cpu_word *cached = cache.read_block();
-
 			return cache.read_block_single();
+
 		}
 
 		void write(address a, const cpu_word *d, unsigned length) {
@@ -328,9 +360,10 @@ class ac_write_through_cache {
 			
 			int cacheIndex=0;
 			int cacheBlock=0;
-			
-			
 			bool cacheAnswer = !cache.get_block_for_write(b, &cacheIndex, &cacheBlock);
+
+
+			/*
 			uint32_t tag = (uint32_t) cache.get_tag(b);		
 			
 			bool cdir2 = false;
@@ -362,7 +395,37 @@ class ac_write_through_cache {
 			#ifdef HAVE_DIR
 				dir.unvalidate(getId(), tag, cacheBlock);
 			#endif 
+			*/	
 			
+
+			//bool cdir2 = !(memory.check_dir((uint32_t) a, getId(), cacheIndex));
+			bool cdir2 = !(dirport.check((uint32_t) a, getId(), cacheIndex));
+			
+			if ( cacheAnswer || cdir2) {
+				if(cacheAnswer)
+					cache.memory_write_hit();
+				cacheIndex = cache.get_available_block();
+				
+				//memory.read_dir((uint32_t) a, cacheIndex, getId());
+				dirport.read((uint32_t) a, cacheIndex, getId());
+
+
+				const cpu_word *tmp_d = memory.read_block(a, block_size);
+				cache.write_block(tmp_d);
+				cache.block_status().set_valid();
+			}
+			if (trace_active) cache_trace->add(trace_write, word_to_byte(b), length);
+			
+			const cpu_word *dd = memory.read_block(a, block_size);
+			const cpu_word *cached = cache.read_block();
+			if(*cached != *dd)
+				cout << "INCORRETO" <<endl;
+				
+			cache.write_block_single(d, length);
+            memory.write_block(word_to_byte(cache.block_address()), cache.read_block(),block_size);
+            
+            //memory.write_dir((uint32_t) a, cacheBlock, getId());	
+			dirport.write((uint32_t) a, cacheBlock, getId());	
 	}
 	
 	void get_statistics(cache_statistics *statistics) {
@@ -390,6 +453,8 @@ class ac_write_through_cache {
    		cache.ps.powersc_connect();
   	}
 };
+
+/*
 #ifdef HAVE_DIR
 	template <
 	unsigned index_size,
@@ -401,6 +466,6 @@ class ac_write_through_cache {
 	typename address
 > Dir ac_write_through_cache <index_size, block_size, associativity, cpu_word, backing_store, replacement_policy, address>::dir;		
 #endif
-
+*/
 #endif /* _AC_CACHE_H_INCLUDED_ */
 

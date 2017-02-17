@@ -47,6 +47,7 @@
 ac_tlm2_port::ac_tlm2_port(char const* nm, uint32_t sz) : name(nm), size(sz) {
 
  payload = new ac_tlm2_payload();
+ payloadExt = new ac_payload_extension();
  
  }
 
@@ -357,6 +358,7 @@ void ac_tlm2_port::write(ac_ptr buf, uint32_t address,
 }
 
 
+
 string ac_tlm2_port::get_name() const {
   return name;
 }
@@ -395,4 +397,15 @@ void ac_tlm2_port::unlock()
  */
 ac_tlm2_port::~ac_tlm2_port() {
     delete payload;
+    
+}
+
+void ac_tlm2_port::read (ac_tlm2_payload *p, sc_core::sc_time &time_info){
+  payload->deep_copy_from(*p);
+  (*this)->b_transport(*payload, time_info); 
+
+}
+void ac_tlm2_port::write (ac_tlm2_payload *p, sc_core::sc_time &time_info){
+  payload->deep_copy_from(*p);
+  (*this)->b_transport(*payload, time_info); 
 }

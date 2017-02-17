@@ -50,7 +50,7 @@
 #include "ac_inout_if.H"
 #include "ac_tlm_protocol.H"
 #include "ac_tlm_dev_id.H"
-
+#include "ac_payload_extension.H"
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -59,7 +59,7 @@ using std::string;
 
 //////////////////////////////////////////////////////////////////////////////
 
-
+#define DIR_ADDRESS         0x23000000
 
 
 // Forward class declarations, needed to compile
@@ -74,7 +74,8 @@ class ac_tlm2_port : public sc_port<ac_tlm2_blocking_transport_if>,
 private:
     /// Persistent payload used in read/write transactions
     ac_tlm2_payload* payload;     /* PAYLOAD   */
-   
+    ac_payload_extension* payloadExt;
+
 public:
   string name;
   uint32_t size;
@@ -117,6 +118,8 @@ public:
    */
   virtual void write(ac_ptr buf, uint32_t address, int wordsize, int n_words,sc_core::sc_time &time_info,unsigned int procId = 0);
 
+  
+
   // Just for compatibility
   virtual void read(ac_ptr buf, uint32_t address, int wordsize)
   {
@@ -140,7 +143,12 @@ public:
     write(buf, address, wordsize, n_words,time_info);
   }
 
+
+  void read (ac_tlm2_payload *p, sc_core::sc_time &time_info);
+  void write (ac_tlm2_payload *p, sc_core::sc_time &time_info);
+  //void check (ac_tlm2_payload *p, sc_core::sc_time &time_info);
   
+
   virtual string get_name() const;
 
   virtual uint32_t get_size() const;

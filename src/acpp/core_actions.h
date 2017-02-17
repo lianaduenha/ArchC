@@ -105,6 +105,7 @@ extern int HaveTLM2Ports;
 extern int HaveTLM2NBPorts;
 extern int HaveTLM2IntrPorts;
 
+
 extern int instr_num;    //!< Number of Instructions
 extern int declist_num;  //!< Number of Decodification lists
 extern int format_num;   //!< Number of Formats
