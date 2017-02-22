@@ -797,6 +797,9 @@ void CreateArchHeader() {
             fprintf(output, "%sac_memport<%s_parms::ac_word, "
                             "%s_parms::ac_Hword> %s_mport;\n",
                     INDENT[1], project_name, project_name, pstorage->name);
+            /**FIXME: dirstorage will be used in CreateArchImpl
+                       but this is not the better way to do this **/
+            dirstorage = pstorage; 
             break;
 
         default:
@@ -813,18 +816,6 @@ void CreateArchHeader() {
         fprintf(output, "%sac_reg<%s_parms::ac_word> intr_reg;\n", INDENT[1],
                 project_name);
     }
-
-/*
-    if (isPlatform){
-       
-        fprintf(output, "%sac_dir DIR;\n",
-                        INDENT[1]);
-       
-       
-    }*/
-                
-
-
 
     fprintf(output, "\n\n");
 
@@ -1026,11 +1017,6 @@ void CreateArchRefHeader() {
     if (HaveTLMIntrPorts || HaveTLM2IntrPorts) 
         fprintf( output, "%sac_reg<%s_parms::ac_word>& intr_reg;\n",INDENT[1], project_name);
 
-    /*
-    if (isPlatform)
-        fprintf(output, "%sac_dir& DIR;\n", INDENT[1]);
-    */  
-
     fprintf(output, "\n");
 
     //ac_resources constructor declaration
@@ -1087,11 +1073,7 @@ void CreateArchRefImpl() {
 
     if (HaveTLMIntrPorts || HaveTLM2IntrPorts) 
         fprintf(output, ", intr_reg(arch.intr_reg) ");
-    /*
-    if (isPlatform)
-        fprintf(output, ", DIR(arch.DIR)");
-    */
-
+    
     fprintf(output, " {}\n\n");
     fclose( output);
 
@@ -2602,14 +2584,6 @@ void CreateArchImpl() {
         fprintf(output, ",\n%sintr_reg(\"instr_reg\",1)", INDENT[1]);
     }
     
-    /*
-    if (isPlatform)
-        fprintf(output, ",\n%sDIR(%s)", INDENT[1], dirstorage);
-    */
-
-
-
-
     /* opening constructor body */
     fprintf(output, " {\n\n");
 
@@ -2640,16 +2614,6 @@ void CreateArchImpl() {
         }
     }
 
-    
-    /*
-    if (isPlatform){
-      fprintf(output, "%s%s.setDir(DIR);\n", INDENT[1], 
-            fetch_device->name);
-      fprintf(output, "%s%s.setDir(DIR);\n", INDENT[1], 
-            first_level_data_device->name);
-    } 
-    */
-    
     fprintf(output, "%sINST_PORT = &%s_mport;\n", INDENT[1],
             fetch_device->name);
 

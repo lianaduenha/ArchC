@@ -59,7 +59,7 @@ using std::string;
 
 //////////////////////////////////////////////////////////////////////////////
 
-#define DIR_ADDRESS         0x23000000
+#define DIR_ADDRESS         0x22000000
 
 
 // Forward class declarations, needed to compile
@@ -146,7 +146,7 @@ public:
 
   void read (ac_tlm2_payload *p, sc_core::sc_time &time_info);
   void write (ac_tlm2_payload *p, sc_core::sc_time &time_info);
-  //void check (ac_tlm2_payload *p, sc_core::sc_time &time_info);
+  
   
 
   virtual string get_name() const;

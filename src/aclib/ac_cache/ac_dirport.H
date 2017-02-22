@@ -36,6 +36,7 @@
 #include "ac_utils.H"
 #include "ac_payload_extension.H"
 #include "ac_tlm2_port.H"
+#include "ac_tlm2_nb_port.H"
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
@@ -43,6 +44,8 @@
 // Forward class declarations, needed to compile
 
 //////////////////////////////////////////////////////////////////////////////
+
+#define DIR_NB
 
 /// Template wrapper class for memory access.
 class ac_dirport
@@ -52,8 +55,12 @@ private:
 
   ac_tlm2_payload* payload;     /* PAYLOAD   */
   ac_payload_extension* payloadExt;
-  ac_tlm2_port* storage;
   
+  #ifdef DIR_NB
+  ac_tlm2_nb_port* storage;
+  #else
+  ac_tlm2_port* storage;
+  #endif
   sc_core::sc_time time_info;
   unsigned int procId;
 
@@ -71,12 +78,21 @@ public:
   }
 
   ///Default constructor with initialization
+  #ifdef DIR_NB
+  explicit ac_dirport(ac_tlm2_nb_port& stg) : storage(&stg),time_info(0,SC_NS) {
+      
+      payload = new ac_tlm2_payload();
+      payloadExt = new ac_payload_extension();
+ 
+  }
+  #else
   explicit ac_dirport(ac_tlm2_port& stg) : storage(&stg),time_info(0,SC_NS) {
       
       payload = new ac_tlm2_payload();
       payloadExt = new ac_payload_extension();
  
   }
+  #endif
 
   virtual ~ac_dirport() { delete payload; }
 

@@ -527,4 +527,42 @@ ac_tlm2_nb_port::~ac_tlm2_nb_port() {
  
 }
 
+void ac_tlm2_nb_port::read (ac_tlm2_payload *p, sc_core::sc_time &time_info){
+    
+    tlm::tlm_phase phase = tlm::BEGIN_REQ;
+    tlm::tlm_sync_enum status;
+    payload_global = new ac_tlm2_payload();
+    payload_global->deep_copy_from(*p);
+
+    //(*this)->b_transport(*payload, time_info); 
+    status = LOCAL_init_socket->nb_transport_fw(*payload_global, phase, time_info); 
+    if(status != tlm::TLM_UPDATED)
+    {
+        printf("\nAC_TLM2_NB_PORT n_words READ ERROR");
+		exit(0);
+	}
+	
+    wait(this->wake_up);
+
+
+}
+void ac_tlm2_nb_port::write (ac_tlm2_payload *p, sc_core::sc_time &time_info){
+
+	
+    tlm::tlm_phase phase = tlm::BEGIN_REQ;
+    tlm::tlm_sync_enum status;
+    
+    payload_global = new ac_tlm2_payload();
+    payload_global->deep_copy_from(*p);
+
+    status = LOCAL_init_socket->nb_transport_fw(*payload_global, phase, time_info); 
+    if(status != tlm::TLM_UPDATED)
+    {
+        printf("\nAC_TLM2_NB_PORT n_words WRITE ERROR");
+		exit(0);
+	}
+
+	wait(this->wake_up);
+    
+}
 

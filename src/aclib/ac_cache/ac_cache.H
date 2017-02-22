@@ -9,6 +9,7 @@
 #include "ac_dirport.H"
 
 
+
 #define MEM_SIZE_ 0x20000000
 
 
@@ -231,6 +232,7 @@ class ac_write_through_cache {
 	int ref;
 	
 	ac_dirport dirport;
+	
 		
 	void setId (int id)
     {
@@ -259,6 +261,7 @@ class ac_write_through_cache {
 		ref =0;
 	
 	}
+	
 	ac_write_through_cache(backing_store &memory_, ac_tlm2_port &dir, const int proc_id=-1) : memory(memory_), trace_active(false),
   cache(proc_id), dirport(dir) {
 
@@ -267,6 +270,16 @@ class ac_write_through_cache {
 		ref =0;
 	
 	}
+
+   ac_write_through_cache(backing_store &memory_, ac_tlm2_nb_port &dir, const int proc_id=-1) : memory(memory_), trace_active(false),
+  cache(proc_id), dirport(dir) {
+
+		setId(proc_id);
+		memory.setBlockSize (block_size);
+		ref =0;
+	
+	}
+
 	~ac_write_through_cache() {
 		if (trace_active) delete cache_trace;
 	}
@@ -408,7 +421,6 @@ class ac_write_through_cache {
 				
 				//memory.read_dir((uint32_t) a, cacheIndex, getId());
 				dirport.read((uint32_t) a, cacheIndex, getId());
-
 
 				const cpu_word *tmp_d = memory.read_block(a, block_size);
 				cache.write_block(tmp_d);
