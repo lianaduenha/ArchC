@@ -243,7 +243,7 @@ void EnumerateCaches(void);
 void GetFetchDevice(void);
 void GetLoadDevice(void);
 void GetFirstLevelDataDevice(void);
-
+void GetMainMemoryDevice(void);
 
 //@}
 

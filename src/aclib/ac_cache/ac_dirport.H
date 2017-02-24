@@ -37,6 +37,7 @@
 #include "ac_payload_extension.H"
 #include "ac_tlm2_port.H"
 #include "ac_tlm2_nb_port.H"
+#include "ac_mem.H" 
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
@@ -45,7 +46,9 @@
 
 //////////////////////////////////////////////////////////////////////////////
 
-#define DIR_NB
+//#define DIR_N // directory with non-blocking interface with the network
+#define DIR_B // directory with blocking interface with the network)
+//#define DIR_M // directory inside the processor (no network)
 
 /// Template wrapper class for memory access.
 class ac_dirport
@@ -56,10 +59,16 @@ private:
   ac_tlm2_payload* payload;     /* PAYLOAD   */
   ac_payload_extension* payloadExt;
   
-  #ifdef DIR_NB
+  #ifdef DIR_N
   ac_tlm2_nb_port* storage;
-  #else
+  #endif
+
+  #ifdef DIR_B
   ac_tlm2_port* storage;
+  #endif
+
+  #ifdef DIR_M
+  ac_mem* storage;
   #endif
   sc_core::sc_time time_info;
   unsigned int procId;
@@ -78,14 +87,16 @@ public:
   }
 
   ///Default constructor with initialization
-  #ifdef DIR_NB
+  #ifdef DIR_N
   explicit ac_dirport(ac_tlm2_nb_port& stg) : storage(&stg),time_info(0,SC_NS) {
       
       payload = new ac_tlm2_payload();
       payloadExt = new ac_payload_extension();
  
   }
-  #else
+  #endif
+
+  #ifdef DIR_B
   explicit ac_dirport(ac_tlm2_port& stg) : storage(&stg),time_info(0,SC_NS) {
       
       payload = new ac_tlm2_payload();
@@ -93,6 +104,16 @@ public:
  
   }
   #endif
+
+  #ifdef DIR_M
+  explicit ac_dirport(ac_mem& stg) : storage(&stg),time_info(0,SC_NS) {
+      
+      payload = new ac_tlm2_payload();
+      payloadExt = new ac_payload_extension();
+ 
+  }
+  #endif
+
 
   virtual ~ac_dirport() { delete payload; }
 
@@ -148,7 +169,6 @@ void read(uint32_t address, int cacheIndex, int nCache)
   
   bool check(uint32_t address, int nCache, int cacheIndex)
   {
-
     
     sc_core::sc_time time = sc_core::sc_time(0, SC_NS);
     bool resposta=false;

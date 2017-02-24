@@ -120,6 +120,7 @@ ac_sto_list* load_device=0;
 ac_sto_list *dirstorage;
 int isPlatform = 0;
 bool DIRPRINTED = false;
+int space_address = 0;
 
 /*! This is the table of mappings.  Mappings are tried sequentially
   for each option encountered; the first one that matches, wins.  */
@@ -491,6 +492,7 @@ int main(int argc, char** argv) {
   GetFetchDevice();
   GetLoadDevice();
   GetFirstLevelDataDevice();
+  GetMainMemoryDevice();
 
   //Creating Resources Header File
   CreateArchHeader();
@@ -2443,7 +2445,7 @@ void CreateProcessorImpl() {
 void CreateArchImpl() {
 
     DIRPRINTED = false;
-    extern ac_sto_list *storage_list, *fetch_device, *first_level_data_device;
+    extern ac_sto_list *storage_list, *fetch_device, *first_level_data_device, *lowest_level_device;
     extern int HaveMemHier, HaveTLMPorts, HaveTLM2IntrPorts, HaveTLM2Ports,
         HaveTLM2NBPorts, HaveTLM2IntrPorts;
     extern ac_sto_list *load_device;
@@ -2518,20 +2520,20 @@ void CreateArchImpl() {
             if (!pstorage->parms) { // It is a generic cache. Just emit a base
                                     // container object.
                 fprintf(output, "%s%s(\"%s\", %uU),\n", INDENT[1],
-                        pstorage->name, pstorage->name, pstorage->size);
+                        pstorage->name, pstorage->name, lowest_level_device->size);
                 fprintf(output, "%s%s(*this, %s)", INDENT[1], pstorage->name,
                         pstorage->name);
             } else {
                 // It is an ac_cache object.
                 if (isPlatform) 
                   {
-                    fprintf(output, "%s%s(%s_mport, %s, globalId)", INDENT[1],
-                        pstorage->name, pstorage->higher->name, dirstorage->name);
+                    fprintf(output, "%s%s(%s_mport, %s, %uU, globalId)", INDENT[1],
+                        pstorage->name, pstorage->higher->name, dirstorage->name, lowest_level_device->size);
                   }
                   else
                   {
-                   fprintf(output, "%s%s(%s_mport, globalId)", INDENT[1],
-                        pstorage->name, pstorage->higher->name); 
+                   fprintf(output, "%s%s(%s_mport, %uU, globalId)", INDENT[1],
+                        pstorage->name, pstorage->higher->name, lowest_level_device->size); 
                   }
                 fprintf(output, ",\n%s%s_if(%s)", INDENT[1], pstorage->name,
                         pstorage->name);
@@ -2545,6 +2547,8 @@ void CreateArchImpl() {
                     pstorage->name, pstorage->size);
             fprintf(output, "%s%s_mport(*this, %s)", INDENT[1], pstorage->name,
                     pstorage->name);
+
+            
             break;
 
         case TLM_PORT:
@@ -2552,6 +2556,7 @@ void CreateArchImpl() {
                     pstorage->name, pstorage->size);
             fprintf(output, "%s%s_mport(*this, %s)", INDENT[1], pstorage->name,
                     pstorage->name);
+            
             break;
 
         case TLM2_PORT:
@@ -2559,6 +2564,7 @@ void CreateArchImpl() {
                     pstorage->name, pstorage->size);
             fprintf(output, "%s%s_mport(*this, %s)", INDENT[1], pstorage->name,
                     pstorage->name);
+            
            
             break;
 
@@ -2567,6 +2573,7 @@ void CreateArchImpl() {
                     pstorage->name, pstorage->size);
             fprintf(output, "%s%s_mport(*this, %s)", INDENT[1], pstorage->name,
                     pstorage->name);
+            
             break;
 
         default:
@@ -4731,19 +4738,6 @@ void TLMMemoryClassDeclaration(ac_sto_list * memory)
   abort();
 }
 
-/*void TLMCacheMemoryClassDeclaration(ac_sto_list * memory)
-{
-    extern char *project_name;
-    const unsigned s = 70;
-    //unsigned i = memory->size * 8 / wordsize;
-    memory->class_declaration = malloc(s);
-
-
-    if (snprintf(memory->class_declaration, s, "ac_cache_memport<%s_parms::ac_word, %s_parms::ac_Hword>", project_name, project_name) >= s)
-  abort();
-}*/
-
-
 void CacheClassDeclaration(ac_sto_list * storage)
 {
     const unsigned s = 800;
@@ -4855,6 +4849,33 @@ void GetFirstLevelDataDevice()
         }
 
         if (!first_level_data_device) {  //Couldn't find a data device. Error!
+            AC_INTERNAL_ERROR("Could not determine a device for data access.");
+            exit(EXIT_FAILURE);
+        }
+    }
+}
+
+void GetMainMemoryDevice()
+{
+    extern ac_sto_list *lowest_level_device, *storage_list;
+    ac_sto_list *pstorage;
+
+
+    int level = 0;
+
+    
+    if (!lowest_level_device) {
+        
+        for (pstorage = storage_list; pstorage != NULL; pstorage = pstorage->next) {
+            if ( pstorage->type == MEM || pstorage->type == DCACHE || pstorage->is_tlm ) {
+                if ( pstorage->level > level ) {
+                   lowest_level_device = pstorage;
+                   level = pstorage->level;
+                }
+            }
+        }
+
+        if (!lowest_level_device) {  //Couldn't find a data device. Error!
             AC_INTERNAL_ERROR("Could not determine a device for data access.");
             exit(EXIT_FAILURE);
         }

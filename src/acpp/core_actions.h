@@ -116,7 +116,10 @@ extern int pipe_num;     //!< Number of Pipelines
 extern int reg_width;    //!< Bit width of registers in a regbank.
 extern int largest_format_size;
 
+
 extern ac_sto_list* fetch_device; //!< Indicates the device used for fetching instructions.
+extern ac_sto_list* first_level_data_device;   //!< Indicates the first level data device 
+extern ac_sto_list* lowest_level_device;  //!< Indicates the lowest level device 
 
 /* functions used in the semantic actions */
 extern void init_core_actions();

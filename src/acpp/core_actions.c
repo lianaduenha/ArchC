@@ -91,8 +91,10 @@ int pipe_num;
 int reg_width;
 int largest_format_size;
 
+
 ac_sto_list* fetch_device;
 ac_sto_list* first_level_data_device;
+ac_sto_list* lowest_level_device;
 
 void init_core_actions()
 {
@@ -148,6 +150,7 @@ void init_core_actions()
   pipe_num = 0;
   reg_width = 0;
   largest_format_size = 0;
+
 
   fetch_device = NULL;
   first_level_data_device = NULL;
@@ -550,7 +553,7 @@ int add_storage(char* name, unsigned size, ac_sto_types type, char* typestr, cha
     pstorage->format = NULL;
 
   pstorage->size = size;
-
+ 
   if ( type == CACHE || type == ICACHE || type == DCACHE || type == MEM || 
        type == TLM_PORT || type == TLM2_PORT || type == TLM2_NB_PORT )
     pstorage->has_memport = true;

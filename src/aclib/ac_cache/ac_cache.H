@@ -4,14 +4,9 @@
 #include "ac_cache_bhv.H"
 #include "ac_cache_trace.H"
 
-
-
 #include "ac_dirport.H"
 
-
-
-#define MEM_SIZE_ 0x20000000
-
+//#define MEM_SIZE_ 0x20000000
 
 struct write_back_state {
 	bool valid;
@@ -83,6 +78,7 @@ class ac_write_back_cache {
 	backing_store &memory;
 	ac_cache_trace *cache_trace;
 	bool trace_active;
+    int space_address;
 	
 	int idCache;
 	
@@ -106,9 +102,9 @@ class ac_write_back_cache {
 	ac_write_back_cache(const ac_write_back_cache &, const int proc_id=-1);
 	
 	public:
-	ac_write_back_cache(backing_store &memory_, const int proc_id=-1) : memory(memory_), trace_active(false),
+	ac_write_back_cache(backing_store &memory_, int space_addr, const int proc_id=-1) : memory(memory_), trace_active(false),
   cache(proc_id) {
-
+  		space_address = space_addr;
   		setId(proc_id);
 		memory.setBlockSize (block_size);
 	}
@@ -130,7 +126,7 @@ class ac_write_back_cache {
 
 		address b = byte_to_word(a);
 
-		if(a >= MEM_SIZE_){
+		if(a >= space_address){
 			a = a/block_size*block_size;
 			const cpu_word *d = memory.read_block(a, sizeof(cpu_word));
 			return d;
@@ -163,7 +159,7 @@ class ac_write_back_cache {
 
 		address b = byte_to_word(a);
 
-		if(a >= MEM_SIZE_){
+		if(a >= space_address){
 			a = a/block_size*block_size;
 			memory.write_block(a, d, sizeof(cpu_word));
 			return;	
@@ -229,6 +225,7 @@ class ac_write_through_cache {
 	ac_cache_trace *cache_trace;
 	bool trace_active;
 	int idCache;
+	int space_address;
 	int ref;
 	
 	ac_dirport dirport;
@@ -253,32 +250,43 @@ class ac_write_through_cache {
 	ac_write_through_cache(const ac_write_through_cache &, const int proc_id=-1);
 	
 	public:
-	ac_write_through_cache(backing_store &memory_, const int proc_id=-1) : memory(memory_), trace_active(false),
+	ac_write_through_cache(backing_store &memory_, int space_addr, const int proc_id=-1) : memory(memory_), trace_active(false),
   cache(proc_id) {
-
+  		space_address = space_addr;
 		setId(proc_id);
 		memory.setBlockSize (block_size);
 		ref =0;
 	
 	}
 	
-	ac_write_through_cache(backing_store &memory_, ac_tlm2_port &dir, const int proc_id=-1) : memory(memory_), trace_active(false),
-  cache(proc_id), dirport(dir) {
+	ac_write_through_cache(backing_store &memory_, ac_tlm2_port &dirOutput, int space_addr, const int proc_id=-1) : memory(memory_), trace_active(false),
+  cache(proc_id), dirport(dirOutput) {
 
+  		space_address = space_addr;
 		setId(proc_id);
 		memory.setBlockSize (block_size);
 		ref =0;
 	
 	}
 
-   ac_write_through_cache(backing_store &memory_, ac_tlm2_nb_port &dir, const int proc_id=-1) : memory(memory_), trace_active(false),
-  cache(proc_id), dirport(dir) {
-
+   ac_write_through_cache(backing_store &memory_, ac_tlm2_nb_port &dirOutput, int space_addr, const int proc_id=-1) : memory(memory_), trace_active(false),
+  cache(proc_id), dirport(dirOutput) {
+  	    space_address = space_addr;
+		printf("\nspace address = %d", space_address);
 		setId(proc_id);
 		memory.setBlockSize (block_size);
 		ref =0;
 	
 	}
+
+	ac_write_through_cache (backing_store &memory_, ac_mem &dirOutput, int space_addr, const int proc_id=-1) : memory(memory_), trace_active(false),
+  cache(proc_id), dirport(dirOutput) {
+  	    space_address = space_addr;
+		setId(proc_id);
+		memory.setBlockSize (block_size);
+		ref =0;
+	
+  }
 
 	~ac_write_through_cache() {
 		if (trace_active) delete cache_trace;
@@ -295,10 +303,9 @@ class ac_write_through_cache {
 
 		
 			address b = byte_to_word(a);
-
 			
 			a = a/block_size*block_size;
-			if(a >= MEM_SIZE_ ){
+			if(a >= space_address ){
 
 				const cpu_word *d = memory.read_block(a, length);
 				return d;
@@ -364,8 +371,7 @@ class ac_write_through_cache {
    		    address b = byte_to_word(a);
 
 			a = a/block_size*block_size;
-			if(a >= MEM_SIZE_){
-
+			if(a >= space_address){
 				
 				memory.write_block(a, d, length);
 				return;	
