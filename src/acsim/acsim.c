@@ -638,7 +638,7 @@ void CreateArchHeader() {
         fprintf(output, "#include \"ac_plrum_replacement_policy.H\"\n");
         fprintf(output, "#include \"ac_lru_replacement_policy.H\"\n");
         fprintf(output, "#include \"ac_cache_if.H\"\n");
-        fprintf(output, "#include \"ac_dir.H\"\n");
+        
     }
 
     // Declaring Architecture Resources class.
@@ -902,7 +902,7 @@ void CreateArchRefHeader() {
         fprintf(output, "#include \"ac_random_replacement_policy.H\"\n");
         fprintf(output, "#include \"ac_plrum_replacement_policy.H\"\n");
         fprintf(output, "#include \"ac_lru_replacement_policy.H\"\n");
-        fprintf( output, "#include  \"ac_dir.H\"\n");
+        
     }
 
 
