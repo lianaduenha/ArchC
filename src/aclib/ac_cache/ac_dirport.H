@@ -139,7 +139,8 @@ void read(uint32_t address, int cacheIndex, int nCache)
     payload->set_address((sc_dt::uint64)DIR_ADDRESS);
     payload->set_data_length(sizeof(uint32_t));    
 
-    storage->read(payload,time);
+    //printf("\n\ndir read rule = %d", payloadExt->getRule());
+    storage->read(*payload,time);
     setTimeInfo(time);
     
     
@@ -147,10 +148,12 @@ void read(uint32_t address, int cacheIndex, int nCache)
 
   void write(uint32_t address, int cacheIndex, int nCache)
   {
-    
+
+     
     sc_core::sc_time time = sc_core::sc_time(0, SC_NS);
     bool resposta=false;
     int rule=2;
+
     payloadExt->setNumberCache(nCache);
     payloadExt->setAddress(address);
     payloadExt->setCacheIndex(cacheIndex);
@@ -161,8 +164,9 @@ void read(uint32_t address, int cacheIndex, int nCache)
     payload->set_address((sc_dt::uint64)DIR_ADDRESS);
     payload->set_data_length(sizeof(uint32_t));
 
-
-    storage->write(payload,time);
+    
+    //printf("\n\ndir write rule = %d", payloadExt->getRule());
+    storage->write(*payload,time);
     setTimeInfo (time);
     
   }
@@ -187,11 +191,37 @@ void read(uint32_t address, int cacheIndex, int nCache)
   
     payload->set_data_length(sizeof(uint32_t));
 
-    storage->read(payload, time);
+    
+    //printf("\n\ndir check rule = %d", payloadExt->getRule());
+    storage->read(*payload, time);
     setTimeInfo (time);
+
+    payload->get_extension(payloadExt);
     resposta = payloadExt->getValidation();
+    //printf("\ndir validation = %d depois", resposta);
+    //printf("\ndir check rule = %d depois", payloadExt->getRule());
+    
+
     return resposta;
   }
+
+  void start(uint32_t index_size, int assoc)
+  {
+      //printf("\nem dirport index = %d, associatividade = %d", index_size, assoc);  
+      int rule=0;
+      sc_core::sc_time time = sc_core::sc_time(0, SC_NS);
+      payloadExt->setNWay(assoc);
+      payloadExt->setIndex_size(index_size);
+      payloadExt->setRule(rule);
+      payload->set_extension(payloadExt);
+      payload->set_command(tlm::TLM_READ_COMMAND);
+      payload->set_address((sc_dt::uint64)DIR_ADDRESS);
+  
+      payload->set_data_length(sizeof(uint32_t));
+      storage->read(*payload, time);
+      setTimeInfo (time);
+  }
+
 
 
   void setTimeInfo(sc_core::sc_time time)

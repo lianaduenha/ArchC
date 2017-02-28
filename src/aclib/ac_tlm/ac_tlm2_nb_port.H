@@ -58,7 +58,7 @@
 #include "ac_tlm_protocol.H"
 #include "ac_tlm_dev_id.H"
 
-
+#include "ac_payload_extension.H"
 //////////////////////////////////////////////////////////////////////////////
 
 // using statements

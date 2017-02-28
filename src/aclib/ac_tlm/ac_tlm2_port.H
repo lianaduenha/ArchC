@@ -144,8 +144,8 @@ public:
   }
 
 
-  void read (ac_tlm2_payload *p, sc_core::sc_time &time_info);
-  void write (ac_tlm2_payload *p, sc_core::sc_time &time_info);
+  void read (ac_tlm2_payload &p, sc_core::sc_time &time_info);
+  void write (ac_tlm2_payload &p, sc_core::sc_time &time_info);
   
   
 

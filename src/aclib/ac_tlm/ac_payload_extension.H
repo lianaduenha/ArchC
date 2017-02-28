@@ -49,7 +49,6 @@ class ac_payload_extension : public tlm::tlm_extension<ac_payload_extension>
 			}
 			virtual void copy_from(tlm_extension_base const &ext1) {  
 
-	
 				tlm_extension_base* ext2 = ext1.clone ();
 				ac_payload_extension *new_ext = reinterpret_cast<ac_payload_extension*> (ext2);
 
@@ -60,7 +59,10 @@ class ac_payload_extension : public tlm::tlm_extension<ac_payload_extension>
 				this->validation = new_ext->validation;
 				this->nWay = new_ext->nWay;
 				this->index_size = new_ext->index_size;
-							
+
+				// is this delete necessary?
+				delete new_ext;
+					
 			} 
 			
 		private: 

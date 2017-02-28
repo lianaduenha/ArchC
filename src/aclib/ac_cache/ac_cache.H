@@ -80,6 +80,8 @@ class ac_write_back_cache {
 	bool trace_active;
     int space_address;
 	
+	ac_dirport dirport;
+
 	int idCache;
 	
  	void setId (int id)
@@ -109,6 +111,32 @@ class ac_write_back_cache {
 		memory.setBlockSize (block_size);
 	}
 	
+	ac_write_back_cache(backing_store &memory_, ac_tlm2_port &dirOutput, int space_addr, const int proc_id=-1) : memory(memory_), trace_active(false),
+  cache(proc_id), dirport(dirOutput) {
+		
+  		space_address = space_addr;
+		setId(proc_id);
+		memory.setBlockSize (block_size);
+
+	}
+
+   ac_write_back_cache(backing_store &memory_, ac_tlm2_nb_port &dirOutput, int space_addr, const int proc_id=-1) : memory(memory_), trace_active(false),
+  cache(proc_id), dirport(dirOutput) {
+  		
+  	    space_address = space_addr;
+		setId(proc_id);
+		memory.setBlockSize (block_size);
+
+	}
+
+	ac_write_back_cache (backing_store &memory_, ac_mem &dirOutput, int space_addr, const int proc_id=-1) : memory(memory_), trace_active(false),
+  cache(proc_id), dirport(dirOutput) {
+  		
+  	    space_address = space_addr;
+		setId(proc_id);
+		memory.setBlockSize (block_size);
+  }
+
 	~ac_write_back_cache() {
 		if (trace_active) delete cache_trace;
 	}
@@ -122,16 +150,16 @@ class ac_write_back_cache {
 
 	  const cpu_word *read(address a, unsigned length) {
 
-		printf("\nAC_CACHE WB::read -> address=%x  length=%d", a, length);
+		//printf("\nAC_CACHE WB::read -> address=%x  length=%d", a, length);
 
 		address b = byte_to_word(a);
 
-		if(a >= space_address){
-			a = a/block_size*block_size;
-			const cpu_word *d = memory.read_block(a, sizeof(cpu_word));
-			return d;
-		}
 
+		a = a/block_size*block_size;
+		if(a >= space_address ){
+				const cpu_word *d = memory.read_block(a, length);
+				return d;
+		}
 
 		if (!cache.get_block_for_read(b)) {
 			cache.get_available_block();
@@ -139,7 +167,7 @@ class ac_write_back_cache {
 				memory.write_block(word_to_byte(cache.block_address()),
 									     cache.read_block(), block_size);
 			}
-			a = a/block_size*block_size;
+
 			const cpu_word *d = memory.read_block(a, block_size);
 			cache.write_block(d);
 			cache.block_status().set_valid();
@@ -154,7 +182,7 @@ class ac_write_back_cache {
 
 	  void write(address a, const cpu_word *d, unsigned length) {
 
-		printf("\nAC_CACHE WB::write -> address=%x  length=%d", a, length);
+		//printf("\nAC_CACHE WB::write -> address=%x  length=%d", a, length);
 
 
 		address b = byte_to_word(a);
@@ -226,9 +254,9 @@ class ac_write_through_cache {
 	bool trace_active;
 	int idCache;
 	int space_address;
-	int ref;
-	
+		
 	ac_dirport dirport;
+	bool isFirstOp;
 	
 		
 	void setId (int id)
@@ -252,39 +280,43 @@ class ac_write_through_cache {
 	public:
 	ac_write_through_cache(backing_store &memory_, int space_addr, const int proc_id=-1) : memory(memory_), trace_active(false),
   cache(proc_id) {
+
+  	    
   		space_address = space_addr;
 		setId(proc_id);
 		memory.setBlockSize (block_size);
-		ref =0;
-	
+		isFirstOp = true;
+		
 	}
 	
 	ac_write_through_cache(backing_store &memory_, ac_tlm2_port &dirOutput, int space_addr, const int proc_id=-1) : memory(memory_), trace_active(false),
   cache(proc_id), dirport(dirOutput) {
-
+		
   		space_address = space_addr;
 		setId(proc_id);
 		memory.setBlockSize (block_size);
-		ref =0;
-	
+		isFirstOp = true;
+
 	}
 
    ac_write_through_cache(backing_store &memory_, ac_tlm2_nb_port &dirOutput, int space_addr, const int proc_id=-1) : memory(memory_), trace_active(false),
   cache(proc_id), dirport(dirOutput) {
+  		
   	    space_address = space_addr;
-		printf("\nspace address = %d", space_address);
 		setId(proc_id);
 		memory.setBlockSize (block_size);
-		ref =0;
-	
+		isFirstOp = true;
+
 	}
 
 	ac_write_through_cache (backing_store &memory_, ac_mem &dirOutput, int space_addr, const int proc_id=-1) : memory(memory_), trace_active(false),
   cache(proc_id), dirport(dirOutput) {
+  		
   	    space_address = space_addr;
 		setId(proc_id);
 		memory.setBlockSize (block_size);
-		ref =0;
+		isFirstOp = true;
+	
 	
   }
 
@@ -301,7 +333,13 @@ class ac_write_through_cache {
 	
 	const cpu_word *read(address a, unsigned length) {
 
-		
+			
+			if (isFirstOp) 
+			{		//printf("\nna cache index = %d, associatividade = %d", index_size, associativity);
+					dirport.start(index_size,associativity);
+					isFirstOp=false;
+			}
+
 			address b = byte_to_word(a);
 			
 			a = a/block_size*block_size;
@@ -367,7 +405,18 @@ class ac_write_through_cache {
 
 		}
 
+
+
 		void write(address a, const cpu_word *d, unsigned length) {
+
+
+			if (isFirstOp) 
+			{
+					//printf("\nna cache index = %d, associatividade = %d", index_size, associativity);
+					dirport.start(index_size,associativity);
+					isFirstOp=false;
+			}
+
    		    address b = byte_to_word(a);
 
 			a = a/block_size*block_size;
@@ -443,7 +492,7 @@ class ac_write_through_cache {
             memory.write_block(word_to_byte(cache.block_address()), cache.read_block(),block_size);
             
             //memory.write_dir((uint32_t) a, cacheBlock, getId());	
-			dirport.write((uint32_t) a, cacheBlock, getId());	
+            dirport.write((uint32_t) a, cacheBlock, getId());	
 	}
 	
 	void get_statistics(cache_statistics *statistics) {

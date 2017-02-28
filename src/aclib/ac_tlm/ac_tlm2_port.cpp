@@ -400,12 +400,44 @@ ac_tlm2_port::~ac_tlm2_port() {
     
 }
 
-void ac_tlm2_port::read (ac_tlm2_payload *p, sc_core::sc_time &time_info){
-  payload->deep_copy_from(*p);
-  (*this)->b_transport(*payload, time_info); 
+void ac_tlm2_port::read (ac_tlm2_payload &p, sc_core::sc_time &time_info){
+
+  /*ac_payload_extension* teste_ex;
+  payload.get_extension(teste_ex);
+  if (teste_ex == 0) 
+    printf("\nextension vazia em ac_tlm2_port::read");
+  printf("\nac_tlm2_port::read rule = %d", teste_ex->getRule());
+  */
+
+  (*this)->b_transport(p, time_info); 
+  
+  /*
+  payload.get_extension(teste_ex);
+  if (teste_ex == 0) 
+    printf("\nextension vazia em ac_tlm2_port::read após b_transport");
+  
+  printf("\nac_tlm2_port::read validation = %d após b_transport", teste_ex->getValidation());
+  printf("\nac_tlm2_port::read rule = %d após b_transport", teste_ex->getRule());
+  */
+
 
 }
-void ac_tlm2_port::write (ac_tlm2_payload *p, sc_core::sc_time &time_info){
-  payload->deep_copy_from(*p);
-  (*this)->b_transport(*payload, time_info); 
+void ac_tlm2_port::write (ac_tlm2_payload &p, sc_core::sc_time &time_info){
+  
+
+ /* ac_payload_extension* teste_ex;
+  payload.get_extension(teste_ex);
+  if (teste_ex == 0) 
+    printf("\nextension vazia em ac_tlm2_port::write");
+
+  printf("\nac_tlm2_port::write rule = %d", teste_ex->getRule());
+  */
+  (*this)->b_transport(p, time_info); 
+
+ /* payload.get_extension(teste_ex);
+ if (teste_ex == 0) 
+    printf("\nextension vazia em ac_tlm2_port::read após b_transport");
+  printf("\nac_tlm2_port::write rule = %d após b_transport", teste_ex->getRule());
+  */
+  
 }

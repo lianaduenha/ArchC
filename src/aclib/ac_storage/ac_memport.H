@@ -272,10 +272,6 @@ public:
       return p;
       */
     
-      
-
-      
-
       l = byte_to_word(l);
 
       for (unsigned i=0; i<l; i++)

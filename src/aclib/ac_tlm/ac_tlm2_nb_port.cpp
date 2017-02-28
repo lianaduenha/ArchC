@@ -334,8 +334,6 @@ void ac_tlm2_nb_port::write(ac_ptr buf, uint32_t address, int wordsize,sc_core::
 	payload_global->free_all_extensions();	
 
 
-
-
   switch (wordsize) {
   case 8:
     payload_global->set_command(tlm::TLM_READ_COMMAND);
@@ -531,21 +529,37 @@ void ac_tlm2_nb_port::read (ac_tlm2_payload *p, sc_core::sc_time &time_info){
     
     tlm::tlm_phase phase = tlm::BEGIN_REQ;
     tlm::tlm_sync_enum status;
+    
     payload_global = new ac_tlm2_payload();
     payload_global->deep_copy_from(*p);
-
-    //(*this)->b_transport(*payload, time_info); 
+    
     status = LOCAL_init_socket->nb_transport_fw(*payload_global, phase, time_info); 
+    
     if(status != tlm::TLM_UPDATED)
     {
-        printf("\nAC_TLM2_NB_PORT n_words READ ERROR");
+        printf("\nAC_TLM2_NB_PORT READ ERROR");
 		exit(0);
 	}
 	
     wait(this->wake_up);
+    
+
+    ac_payload_extension *ex;
+    payload_global->get_extension(ex);
+    if (ex == NULL) {
+    	printf("\n\n\nproblemas com a extension do payload em ac_tlm2_nb_port");
+    	exit(1);
+    }
+
+    //bool resposta = ex->getValidation();
+    //printf ("\nresposta na extension = %d", resposta);
+    //p->deep_copy_from(*payload_global);
+    
+    //delete payload_global;
 
 
 }
+
 void ac_tlm2_nb_port::write (ac_tlm2_payload *p, sc_core::sc_time &time_info){
 
 	
@@ -556,13 +570,35 @@ void ac_tlm2_nb_port::write (ac_tlm2_payload *p, sc_core::sc_time &time_info){
     payload_global->deep_copy_from(*p);
 
     status = LOCAL_init_socket->nb_transport_fw(*payload_global, phase, time_info); 
+
     if(status != tlm::TLM_UPDATED)
     {
-        printf("\nAC_TLM2_NB_PORT n_words WRITE ERROR");
+        printf("\nAC_TLM2_NB_PORT WRITE ERROR");
 		exit(0);
 	}
 
+	ac_payload_extension *ex;
+    payload_global->get_extension(ex);
+    printf("\nac_tlm2_nb_port em write antes do wait rule = %d", ex->getRule());
+
+
 	wait(this->wake_up);
+
+   // ac_payload_extension *ex;
+    payload_global->get_extension(ex);
+
+    if (ex == NULL) {
+    	printf("\n\n\nproblemas com a extension do payload em ac_tlm2_nb_port");
+    	exit(1);
+    }
+
+    printf("\nac_tlm2_nb_port em write depois do wait rule = %d", ex->getRule());
+    
+    //bool resposta = ex->getValidation();
+    //printf ("\nresposta na extension = %d", resposta);
+
+	//p->deep_copy_from(*payload_global);
+	//delete payload_global;
     
 }
 
