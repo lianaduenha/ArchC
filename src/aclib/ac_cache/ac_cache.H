@@ -7,6 +7,7 @@
 #include "ac_dirport.H"
 
 //#define MEM_SIZE_ 0x20000000
+#define HAVE_DIR 1
 
 struct write_back_state {
 	bool valid;
@@ -333,7 +334,6 @@ class ac_write_through_cache {
 	
 	const cpu_word *read(address a, unsigned length) {
 
-			
 			if (isFirstOp) 
 			{		//printf("\nna cache index = %d, associatividade = %d", index_size, associativity);
 					dirport.start(index_size,associativity);
@@ -349,51 +349,33 @@ class ac_write_through_cache {
 				return d;
 			}
 
-			/*codigo do archc original (com dir dentro do ArchC)
-			int cacheIndex=0;
-			bool cacheAnswer = !cache.get_block_for_read(b, &cacheIndex);
-			uint32_t tag = (uint32_t) cache.get_tag(b); 
-			
-			bool cdir = !(memory.check_dir((uint32_t) a, getId(), cacheIndex));
-
-			
-			#ifdef HAVE_DIR
-				cdir = !(dir.checkValidation(getId(), tag, cacheIndex));
-			#endif
-
-			if ( cacheAnswer || cdir) {
-				#ifdef HAVE_DIR
-					if(!cacheAnswer){
-						cache.invalidate(b);  
-						cache.memory_read_hit();
-					}
-				#endif
-				cacheIndex = cache.get_available_block();
-				const cpu_word *d = memory.read_block(a, block_size);
-				#ifdef HAVE_DIR
-					dir.validate(getId(), tag, cacheIndex);
-				#endif
-				cache.write_block(d);
-				cache.block_status().set_valid();
-			}
-			*/	// ate aqui
-
-
 
 			int cacheIndex=0;
 			bool cacheAnswer = !cache.get_block_for_read(b, &cacheIndex);
 			//bool cdir = !(memory.check_dir((uint32_t) a, getId(), cacheIndex));
-			bool cdir = !(dirport.check((uint32_t) a, getId(), cacheIndex));
+			uint32_t tag = (uint32_t) cache.get_tag(b); 
+			bool cdir = false;
+			#ifdef HAVE_DIR
+			//cout <<endl << tag << " " << getId() << " " << cacheIndex <<endl;
+			cdir = !(dirport.check(tag, getId(), cacheIndex));
+			#endif
+			
 				
 			if ( cacheAnswer || cdir) {
-				if(cacheAnswer)
+				#ifdef HAVE_DIR
+				if(!cacheAnswer){
+					cache.invalidate(b);
 					cache.memory_read_hit();
+				}
+				#endif
+				
 				
 				cacheIndex = cache.get_available_block();
-				//memory.read_dir((uint32_t) a, cacheIndex, getId());
-				dirport.read((uint32_t) a, cacheIndex, getId());
-
 				const cpu_word *d = memory.read_block(a, block_size);
+				#ifdef HAVE_DIR
+				dirport.read(tag, cacheIndex, getId());
+				#endif
+				
 				cache.write_block(d);
 				cache.block_status().set_valid();
 			}
@@ -408,7 +390,6 @@ class ac_write_through_cache {
 
 
 		void write(address a, const cpu_word *d, unsigned length) {
-
 
 			if (isFirstOp) 
 			{
@@ -429,70 +410,43 @@ class ac_write_through_cache {
 			int cacheIndex=0;
 			int cacheBlock=0;
 			bool cacheAnswer = !cache.get_block_for_write(b, &cacheIndex, &cacheBlock);
+			uint32_t tag = (uint32_t) cache.get_tag(b);
 
-
-			/*
-			uint32_t tag = (uint32_t) cache.get_tag(b);		
-			
 			bool cdir2 = false;
+			//bool cdir2 = !(memory.check_dir((uint32_t) a, getId(), cacheIndex));
 			#ifdef HAVE_DIR
-				cdir2 = !(dir.checkValidation(getId(), tag, cacheIndex));
+			cdir2 = !(dirport.check(tag, getId(), cacheIndex));
+			//cout << "AC_CACHE check: validation = " << !cdir2<<endl;
 			#endif
 			if ( cacheAnswer || cdir2) {
-				#ifdef HAVE_DIR
-					if(!cacheAnswer){
-						cache.invalidate(b);
-						cache.memory_write_hit();
-					}
-				#endif
-				cacheIndex = cache.get_available_block();
-				const cpu_word *tmp_d = memory.read_block(a, block_size);
-				#ifdef HAVE_DIR
-					dir.validate(getId(), tag, cacheIndex);
-				#endif
-				cache.write_block(tmp_d);
-				cache.block_status().set_valid();
-			}
-			if (trace_active) cache_trace->add(trace_write, word_to_byte(b), length);
-
-			const cpu_word *cached = cache.read_block();
-
-
-			cache.write_block_single(d, length);
-            memory.write_block(word_to_byte(cache.block_address()), cache.read_block(),block_size);
-			#ifdef HAVE_DIR
-				dir.unvalidate(getId(), tag, cacheBlock);
-			#endif 
-			*/	
-			
-
-			//bool cdir2 = !(memory.check_dir((uint32_t) a, getId(), cacheIndex));
-			bool cdir2 = !(dirport.check((uint32_t) a, getId(), cacheIndex));
-			
-			if ( cacheAnswer || cdir2) {
-				if(cacheAnswer)
+				if(!cacheAnswer){
+					cache.invalidate(b);
 					cache.memory_write_hit();
+				}
 				cacheIndex = cache.get_available_block();
-				
-				//memory.read_dir((uint32_t) a, cacheIndex, getId());
-				dirport.read((uint32_t) a, cacheIndex, getId());
-
 				const cpu_word *tmp_d = memory.read_block(a, block_size);
+				//memory.read_dir((uint32_t) a, cacheIndex, getId());
+				#ifdef HAVE_DIR
+				dirport.read(tag, cacheIndex, getId());
+				#endif
+				
+
+				
 				cache.write_block(tmp_d);
 				cache.block_status().set_valid();
 			}
 			if (trace_active) cache_trace->add(trace_write, word_to_byte(b), length);
 			
-			const cpu_word *dd = memory.read_block(a, block_size);
 			const cpu_word *cached = cache.read_block();
-			if(*cached != *dd)
-				cout << "INCORRETO" <<endl;
-				
+
 			cache.write_block_single(d, length);
             memory.write_block(word_to_byte(cache.block_address()), cache.read_block(),block_size);
             
-            //memory.write_dir((uint32_t) a, cacheBlock, getId());	
-            dirport.write((uint32_t) a, cacheBlock, getId());	
+            //memory.write_dir((uint32_t) a, cacheBlock, getId());
+		#ifdef HAVE_DIR
+		dirport.write(tag, cacheBlock, getId());	
+		#endif	
+            	
 	}
 	
 	void get_statistics(cache_statistics *statistics) {
