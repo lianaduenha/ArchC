@@ -226,6 +226,7 @@ int main(int argc, char** argv) {
   extern char *project_name, *isa_filename;
   extern int wordsize;
   extern int fetchsize;
+  extern int frequency;
   
   // Structures to be passed to the decoder generator
   extern ac_dec_format *format_ins_list;
@@ -431,6 +432,11 @@ int main(int argc, char** argv) {
   if( wordsize == 0){
     AC_MSG("Warning: No wordsize defined. Default value is 32 bits.\n");
     wordsize = 32;
+  }
+
+  if( frequency == 0){
+    AC_MSG("Warning: No frequency defined. Default value is 500 Mhz.\n");
+    frequency = 500;
   }
 
   if( fetchsize == 0){
@@ -1107,6 +1113,8 @@ void CreateParmHeader() {
            largest_format_size/8);
   fprintf( output, "static const unsigned int AC_WORDSIZE = %d; \t //!< Architecture wordsize in bits.\n", 
            wordsize);
+  fprintf( output, "static const unsigned int AC_FREQUENCY = %d; \t //!< Architecture frequency in Mhz.\n", 
+           frequency);
   fprintf( output, "static const unsigned int AC_FETCHSIZE = %d; \t //!< Architecture fetchsize in bits.\n", 
            fetchsize);
   fprintf( output, "static const unsigned int AC_MATCH_ENDIAN = %d; \t //!< If the simulated arch match the endian with host.\n", 
@@ -1538,6 +1546,8 @@ void CreateProcessorHeader() {
   char filename[256];
   char description[] = "Architecture Module header file.";
 
+  extern int frequency;
+
   // File containing ISA declaration
   FILE  *output;
 
@@ -1752,7 +1762,7 @@ if (HaveTLM2IntrPorts) {
  
     
   if (ACWaitFlag)
-    fprintf(output, "%sset_proc_freq(1000/module_period_ns);\n", INDENT[2]);
+    fprintf(output, "%sset_proc_freq(%d);\n", INDENT[2], frequency);
 
   fprintf( output, "%s}\n\n", INDENT[1]);  //end constructor
 
@@ -2378,7 +2388,8 @@ void CreateProcessorImpl() {
         fprintf(output, "}\n\n");
 
     }
-    /* GDB enable method */
+
+     /* GDB enable method */
     if (ACGDBIntegrationFlag) {
         fprintf(output, "// Enables GDB\n");
         fprintf(output, "void %s::enable_gdb(int port) {\n", project_name);

@@ -79,6 +79,7 @@ char* isa_filename;                   //!< Name for the isa class file.
 char* helper_contents;                //!< Contents of the ac_helper declaration.
 int wordsize;                         //!< Size of the word type in bits for the current project.
 int fetchsize;                        //!< Size of the fetch word type in bits for the current project.
+int frequency;
 int fetchbuffersize;                  //!< Size of the fetch buffer in bytes for the current project.
 int ac_tgt_endian;                    //!< Indicate the endianness of the target architecture.
 int force_setasm_syntax;              //!< tools should set this flag if the new set_asm syntax is required
@@ -190,6 +191,7 @@ static void yywarn(const char* format, ...)
 %token <text> AC_ISA
 %token <text> AC_WORDSIZE
 %token <text> AC_FETCHSIZE
+%token <text> AC_FREQUENCY
 %token <text> SET_ENDIAN
 %token <text> BIND_TO
 /*** Experimental feature. --Marilia
@@ -197,7 +199,7 @@ static void yywarn(const char* format, ...)
 */
 
 /* ARCH non-terminals */
-%type <text> archdec archdecbody stagedec pipedec declist worddec fetchdec archctordec
+%type <text> archdec archdecbody stagedec pipedec declist worddec freqdec fetchdec archctordec
 %type <text> storagedec storagelist memdec regbankdec cachedec cachenparm
 %type <text> portdec intrportdec
 %type <text> cachesparm cacheobjdec cacheobjdec1 regdec assignregparm assignwidth
@@ -773,6 +775,7 @@ declist: storagedec declist
       | formatdec declist
       | stagedec declist
       | worddec declist
+      | freqdec declist
       | fetchdec declist
 /*** Experimental feature. --Marilia
       | fetchbufferdec declist
@@ -1187,6 +1190,13 @@ worddec: AC_WORDSIZE INT SEMICOLON
        wordsize = $2;
       }
       ;
+
+freqdec: AC_FREQUENCY INT SEMICOLON
+      {
+       /* Declaring frequency for the architecture */
+       frequency = $2;
+      }
+      ;  
 
 fetchdec: AC_FETCHSIZE INT SEMICOLON
       {

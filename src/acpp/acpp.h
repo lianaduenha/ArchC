@@ -60,6 +60,7 @@ extern char *project_name;
 extern char *isa_filename;
 extern int  wordsize;
 extern int  fetchsize;
+extern int frequency;
 extern int  fetchbuffersize;
 extern int  ac_tgt_endian;
 

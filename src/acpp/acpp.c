@@ -59,6 +59,7 @@ void acppInit(int force_asm_syntax)
   isa_filename = NULL;
   wordsize = 0;
   fetchsize = 0;
+  frequency = 0;
   ac_tgt_endian = 1; /* defaults to big endian */
 
   yyin = NULL;
