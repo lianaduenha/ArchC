@@ -10,7 +10,7 @@ noinst_LTLIBRARIES = libacutils.la
 ## ArchC library includes
 
 include_HEADERS = ac_debug_model.H elf32-tiny.h archc.H ac_utils.H ac_log.H ac_msgbuf.H ac_args.H
-libacutils_la_SOURCES = ac_utils.cpp
+libacutils_la_SOURCES = ac_utils.cpp ac_args.cpp
 
 
 if HLT_SUPPORT
