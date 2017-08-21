@@ -1710,18 +1710,19 @@ if (HaveTLM2IntrPorts) {
 
   if (ACPowerEnable) { 
     fprintf( output, "\n#ifdef POWER_SIM\n");
-    fprintf( output, "%s%s( sc_module_name name_ ): ac_module(name_), %s_arch(), ISA(*this), ps((const char*)name_)", 
-           INDENT[1], project_name, project_name);
+    fprintf( output, "%s%s( sc_module_name name_, %s_parms::ac_word gl_id=0): ac_module(name_), %s_arch(), ISA(*this), ps((const char*)name_)", 
+           INDENT[1], project_name, project_name, project_name);
     fprintf( output, "\n#else\n");
-    fprintf( output, "%s%s( sc_module_name name_ ): ac_module(name_), %s_arch(), ISA(*this)", 
-            INDENT[1], project_name, project_name);
+    fprintf( output, "%s%s( sc_module_name name_, %s_parms::ac_word gl_id=0): ac_module(name_), %s_arch(), ISA(*this)", 
+            INDENT[1], project_name, project_name, project_name);
+
     fprintf( output, "\n#endif\n");
   }
 
   else
   {
-    fprintf( output, "%s%s( sc_module_name name_ ): ac_module(name_), %s_arch(), ISA(*this)", 
-            INDENT[1], project_name, project_name);
+    fprintf( output, "%s%s( sc_module_name name_, %s_parms::ac_word gl_id=0): ac_module(name_), %s_arch(), ISA(*this)", 
+            INDENT[1], project_name, project_name, project_name);
 
   }
 
@@ -1758,8 +1759,8 @@ if (HaveTLM2IntrPorts) {
   fprintf( output,"%shas_delayed_load = false; \n", INDENT[2]);
 
   fprintf( output, "%sstart_up=1;\n", INDENT[2]);
-  fprintf( output, "%sid.write(globalId++);\n", INDENT[2]);
- 
+  //fprintf( output, "%sid.write(globalId++);\n", INDENT[2]);
+  fprintf( output, "%sid.write(gl_id);\n", INDENT[2]);
     
   if (ACWaitFlag)
     fprintf(output, "%sset_proc_freq(%d);\n", INDENT[2], frequency);
