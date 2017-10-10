@@ -1759,11 +1759,16 @@ if (HaveTLM2IntrPorts) {
   fprintf( output,"%shas_delayed_load = false; \n", INDENT[2]);
 
   fprintf( output, "%sstart_up=1;\n", INDENT[2]);
-  //fprintf( output, "%sid.write(globalId++);\n", INDENT[2]);
+  fprintf( output, "%sid.write(globalId++);\n", INDENT[2]);
   fprintf( output, "%sid.write(gl_id);\n", INDENT[2]);
     
   if (ACWaitFlag)
     fprintf(output, "%sset_proc_freq(%d);\n", INDENT[2], frequency);
+
+
+
+
+
 
   fprintf( output, "%s}\n\n", INDENT[1]);  //end constructor
 
