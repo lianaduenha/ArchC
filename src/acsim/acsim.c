@@ -1428,8 +1428,6 @@ void CreateISAHeader() {
 
 
 
-
-
   /* instructions */
   for (pinstr = instr_list; pinstr != NULL; pinstr = pinstr->next) {
     for (pformat = format_ins_list;
@@ -1884,7 +1882,11 @@ if (HaveTLM2IntrPorts) {
   fprintf( output, "%sid.write(globalId++);\n", INDENT[2]);
  
   if (ACWaitFlag)
-    fprintf(output, "%sset_proc_freq(%d);\n", INDENT[2], frequency);
+  {
+    // Default frequency equal 400Mhz
+    if (frequency == 0) fprintf(output, "%sset_proc_freq(%d);\n", INDENT[2], 400);
+    else fprintf(output, "%sset_proc_freq(%d);\n", INDENT[2], frequency);
+  }
 
   fprintf( output, "%s}\n\n", INDENT[1]);  //end constructor
 
@@ -2758,6 +2760,14 @@ void CreateMainTmpl() {
   fprintf(output, "%s%s_proc1.PrintStat();\n", INDENT[1], project_name);
   fprintf(output, "%scerr << endl;\n\n", INDENT[1]);
 
+   if (ACPowerEnable) {
+    fprintf(output, "\n\n#ifdef POWER_SIM\n");
+    fprintf(output, "%s(%s_proc1.ps).powersc_connect();\n", INDENT[1], project_name);
+    fprintf(output, "%s(%s_proc1.ps).report();\n", INDENT[1], project_name);
+    fprintf(output, "#endif\n\n");
+  }
+
+  fprintf(output, "%scerr << endl;\n\n", INDENT[1]);
   fprintf( output, "#ifdef AC_STATS\n");
   fprintf( output, "%sac_stats_base::print_all_stats(std::cerr);\n", 
            INDENT[1]);
